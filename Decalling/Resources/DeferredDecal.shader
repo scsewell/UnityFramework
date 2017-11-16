@@ -80,7 +80,7 @@
 
 #if EMISSION_ON
 				float4 emission = tex2D(_EmissionTex, texUV) * _EmissionColor;
-				color.rgb += emission.rgb * emission.a * UNITY_ACCESS_INSTANCED_PROP(_Emission);
+				color.rgb += emission.rgb * emission.a * UNITY_ACCESS_INSTANCED_PROP(_Emission_arr, _Emission);
 #endif
 
 #ifndef UNITY_HDR_ON
@@ -150,9 +150,9 @@
 #if MASKED_NORMALS_ON
 				float normalMask = mask;
 #elif SMOOTH_EDGE
-				float normalMask = UNITY_ACCESS_INSTANCED_PROP(_MaskMultiplier) * facing;
+				float normalMask = UNITY_ACCESS_INSTANCED_PROP(_MaskMultiplier_arr, _MaskMultiplier) * facing;
 #else
-				float normalMask = UNITY_ACCESS_INSTANCED_PROP(_MaskMultiplier);
+				float normalMask = UNITY_ACCESS_INSTANCED_PROP(_MaskMultiplier_arr, _MaskMultiplier);
 #endif
 				normal = (1.0f - normalMask) * gbuffer_normal + normalMask * normal;
 				normal = normalize(normal);

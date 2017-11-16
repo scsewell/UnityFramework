@@ -1,30 +1,49 @@
-﻿using UnityEngine;
+﻿using System.Linq;
 using System.IO;
+using UnityEngine;
 
 namespace Framework.IO
 {
     public static class FileIO
     {
-        private static string EDITOR_CONFIGS = "Configs/";
+        private static string EDITOR_TEMP = "Configs/";
 
-        public static bool FileExists(string directory, string fileName)
+        public static FileInfo[] GetFiles(string directory, string extention)
         {
-            string fullPath = directory + fileName;
-            return Directory.Exists(directory) && File.Exists(fullPath);
+            DirectoryInfo dir = new DirectoryInfo(directory);
+            return dir.GetFiles('*' + extention);
         }
 
-        public static void WriteFile(string content, string directory, string fileName)
+        public static void WriteFile(string content, string path)
         {
-            Directory.CreateDirectory(directory);
-            File.WriteAllText(directory + fileName, content);
+            FileInfo file = new FileInfo(path);
+            Directory.CreateDirectory(file.DirectoryName);
+            File.WriteAllText(path, content);
         }
 
-        public static string ReadFile(string directory, string fileName)
+        public static void WriteFile(byte[] content, string path)
         {
-            if (FileExists(directory, fileName))
+            FileInfo file = new FileInfo(path);
+            Directory.CreateDirectory(file.DirectoryName);
+            File.WriteAllBytes(path, content);
+        }
+
+        public static string ReadFileText(string path)
+        {
+            FileInfo file = new FileInfo(path);
+            if (file.Exists)
             {
-                string fullPath = directory + fileName;
-                return File.ReadAllText(fullPath);
+                return File.ReadAllText(path);
+            }
+            return null;
+        }
+
+        public static byte[] ReadFileBytes(string path)
+        {
+            FileInfo file = new FileInfo(path);
+            if (file.Exists)
+            {
+                return File.ReadAllBytes(path);
             }
             return null;
         }
@@ -35,7 +54,7 @@ namespace Framework.IO
             {
                 case RuntimePlatform.OSXEditor:
                 case RuntimePlatform.LinuxEditor:
-                case RuntimePlatform.WindowsEditor: return EDITOR_CONFIGS;
+                case RuntimePlatform.WindowsEditor: return EDITOR_TEMP;
                 default: return Application.dataPath + "/../";
             }
         }
