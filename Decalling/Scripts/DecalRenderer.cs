@@ -107,7 +107,7 @@ namespace Framework.DeferredDecalling
         {
             PrepareBuffers();
 
-            GeometryUtils.CalculateFrustumPlanes(m_frustumPlanes, m_camera);
+            GeometryUtility.CalculateFrustumPlanes(m_camera, m_frustumPlanes);
             
             DrawGameObjectIDs();
             DrawDeferred();

@@ -44,7 +44,7 @@ namespace Framework
             }
             else
             {
-                m_instance = (T)this;
+                m_instance = this as T;
             }
         }
 

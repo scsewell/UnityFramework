@@ -1,13 +1,16 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Framework
 {
+    [Serializable]
     public struct TransformData
     {
         public Vector3 position;
         public Quaternion rotation;
         public Vector3 scale;
 
+        [SerializeField]
         private Space m_space;
 
         public TransformData(Vector3 position, Quaternion rotation, Vector3 scale, Space space)
@@ -78,6 +81,40 @@ namespace Framework
                 Vector3.Lerp(current.scale, target.scale, fac),
                 current.m_space
             );
+        }
+
+        public override int GetHashCode()
+        {
+            return position.GetHashCode() ^ (rotation.GetHashCode() << 2) ^ (scale.GetHashCode() >> 2) ^ (m_space.GetHashCode() << 4);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is TransformData)
+            {
+                return Equals((TransformData)obj);
+            }
+            return false;
+        }
+
+        public bool Equals(TransformData other)
+        {
+            return position == other.position && rotation == other.rotation && scale == other.scale && m_space == other.m_space;
+        }
+
+        public override string ToString()
+        {
+            return $"space:{m_space} pos:{position} rot:{rotation} scale:{scale}";
+        }
+
+        public static bool operator ==(TransformData a, TransformData b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(TransformData a, TransformData b)
+        {
+            return !a.Equals(b);
         }
     }
 }
