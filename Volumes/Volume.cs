@@ -1,27 +1,30 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace Framework.Volumes
 {
-    public abstract class Volume<TProfile, TManager> : MonoBehaviour
-        where TProfile : VolumeProfile
-        where TManager : VolumeManager<TProfile, TManager>, new()
+    public abstract class Volume<TProfile, TVolume, TManager> : MonoBehaviour
+        where TProfile : ScriptableObject
+        where TVolume : Volume<TProfile, TVolume, TManager>
+        where TManager : VolumeManager<TProfile, TVolume, TManager>, new()
     {
         private const string VOLUME_LAYER_NAME = "Volumes";
         
+        private static TManager m_manager = typeof(TManager).BaseType.GetField("m_instance", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null) as TManager;
+        
         [SerializeField]
-        [Tooltip("The profile for this volume.")]
-        private TProfile sharedProfile;
-
         [Tooltip("The layer used by this volume.")]
-        public VolumeLayer layer;
+        private VolumeLayer m_layer;
 
+        [SerializeField]
         [Tooltip("A global volume is applied to the whole scene.")]
         public bool isGlobal = false;
 
+        [SerializeField]
         [Tooltip("Volume priority in the stack. Higher number means higher priority. Negative values are supported.")]
         [Range(-10000, 10000)]
-        public int priority = 0;
+        private int m_priority = 0;
 
         [Tooltip("Outer distance to start blending from. A value of 0 means no blending and the volume overrides will be applied immediately upon entry.")]
         public float blendDistance = 0f;
@@ -29,12 +32,18 @@ namespace Framework.Volumes
         [Tooltip("Total weight of this volume in the scene. 0 means it won't do anything, 1 means full effect.")]
         [Range(0f, 1f)]
         public float weight = 1f;
-        
-        private VolumeLayer m_previousLayer;
-        private float m_previousPriority;
+
+        [Header("Profile")]
+
+        [SerializeField]
+        [Tooltip("The profile for this volume.")]
+        private TProfile m_sharedProfile;
 
         private readonly List<Collider> m_colliders = new List<Collider>();
         public List<Collider> Colliders => m_colliders;
+
+        public int Priority => m_priority;
+        public VolumeLayer Layer => m_layer;
 
         private TProfile m_profile;
         public TProfile Profile
@@ -43,9 +52,9 @@ namespace Framework.Volumes
             {
                 if (m_profile == null)
                 {
-                    if (sharedProfile != null)
+                    if (m_sharedProfile != null)
                     {
-                        m_profile = sharedProfile;
+                        m_profile = m_sharedProfile;
                     }
                     else
                     {
@@ -75,12 +84,17 @@ namespace Framework.Volumes
 
         private void Awake()
         {
-            if (layer == null)
+            if (m_layer == null)
             {
                 Debug.LogWarning($"Volume \"{name}\" does not have a layer assigned. This volume will be ignored.");
             }
 
             GetComponents(m_colliders);
+
+#if UNITY_EDITOR
+            m_previousLayer = m_layer;
+            m_previousPriority = m_priority;
+#endif
         }
 
         private void OnEnable()
@@ -95,28 +109,33 @@ namespace Framework.Volumes
 
         private void Register()
         {
-            VolumeManager<TProfile, TManager>.Instance.Register(this, layer);
+            m_manager.Register(this as TVolume, m_layer);
         }
 
         private void Deregister()
         {
-            VolumeManager<TProfile, TManager>.Instance.Deregister(this, layer);
+            m_manager.Deregister(this as TVolume, m_layer);
         }
-        
+
 #if UNITY_EDITOR
+        private VolumeLayer m_previousLayer;
+        private float m_previousPriority;
+
+        protected abstract Color Color { get; }
+        
         private void Update()
         {
-            if (layer != m_previousLayer)
+            if (m_layer != m_previousLayer)
             {
                 Deregister();
-                m_previousLayer = layer;
+                m_previousLayer = m_layer;
                 Register();
             }
 
-            if (priority != m_previousPriority)
+            if (m_priority != m_previousPriority)
             {
-                VolumeManager<TProfile, TManager>.Instance.SetLayerDirty(layer);
-                m_previousPriority = priority;
+                m_manager.SetLayerDirty(m_layer);
+                m_previousPriority = m_priority;
             }
         }
 
@@ -133,8 +152,10 @@ namespace Framework.Volumes
             Vector3 scale = transform.localScale;
             Vector3 invScale = new Vector3(1f / scale.x, 1f / scale.y, 1f / scale.z);
             Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, scale);
-            
-            Gizmos.color = new Color(0f, 1f, 0.1f, 0.25f);
+
+            Color color = Color;
+            color.a = 0.25f;
+            Gizmos.color = color;
 
             // Draw a separate gizmo for each collider
             foreach (Collider collider in m_colliders)

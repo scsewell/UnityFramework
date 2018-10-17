@@ -3,16 +3,8 @@ using UnityEngine;
 
 namespace Framework.Volumes
 {
-    public class AudioVolumeBlender : MonoBehaviour
+    public class AudioVolumeBlender : VolumeBlender
     {
-        [SerializeField]
-        [Tooltip("The layer defining which volumes to affect the blending for this source.")]
-        private VolumeLayer m_layer;
-
-        [SerializeField]
-        [Tooltip("The transform from which to get the position used for the volume blending calculations.")]
-        private Transform m_target;
-
         [SerializeField]
         [Tooltip("Restart sounds when they become audible.")]
         private bool m_restartWhenActivated = true;
@@ -30,7 +22,8 @@ namespace Framework.Volumes
             for (int i = 0; i < profiles.Count; i++)
             {
                 var profileBlend = profiles[i];
-                AudioVolumeProfile profile = profileBlend.profile;
+                var volume = profileBlend.volume;
+                var profile = volume.Profile;
 
                 if (profile.clip != null)
                 {
@@ -54,23 +47,28 @@ namespace Framework.Volumes
                     m_active.Add(source);
                     
                     // set the volume based on the weight
-                    float volume = profile.volume * profileBlend.weight;
-
-                    if (!source.isPlaying && volume > 0)
+                    float vol = volume.volume * profileBlend.weight;
+                    if (!source.isPlaying && vol > 0)
                     {
                         source.Play();
                     }
-
-                    source.volume = volume;
+                    source.volume = vol;
                 }
             }
 
             // make sure any sources not in an active volume are not playing
             foreach (AudioSource source in m_sources)
             {
-                if (m_restartWhenActivated && source.isPlaying && !m_active.Contains(source))
+                if (source.isPlaying && !m_active.Contains(source))
                 {
-                    source.Stop();
+                    if (m_restartWhenActivated)
+                    {
+                        source.Stop();
+                    }
+                    else
+                    {
+                        source.Pause();
+                    }
                     source.volume = 0f;
                 }
             }

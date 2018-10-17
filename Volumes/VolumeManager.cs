@@ -3,24 +3,25 @@ using UnityEngine;
 
 namespace Framework.Volumes
 {
-    public abstract class VolumeManager<TProfile, TManager> 
-        where TProfile : VolumeProfile 
-        where TManager : VolumeManager<TProfile, TManager>, new()
+    public abstract class VolumeManager<TProfile, TVolume, TManager> 
+        where TProfile : ScriptableObject
+        where TVolume : Volume<TProfile, TVolume, TManager>
+        where TManager : VolumeManager<TProfile, TVolume, TManager>, new()
     {
         private static readonly TManager m_instance = new TManager();
         public static TManager Instance => m_instance;
         
-        private readonly Dictionary<VolumeLayer, List<Volume<TProfile, TManager>>> m_volumes = new Dictionary<VolumeLayer, List<Volume<TProfile, TManager>>>();
+        private readonly Dictionary<VolumeLayer, List<TVolume>> m_volumes = new Dictionary<VolumeLayer, List<TVolume>>();
         private readonly Dictionary<VolumeLayer, bool> m_sortNeeded = new Dictionary<VolumeLayer, bool>();
         
-        public void Register(Volume<TProfile, TManager> volume, VolumeLayer layer)
+        public void Register(TVolume volume, VolumeLayer layer)
         {
             if (layer != null)
             {
-                List<Volume<TProfile, TManager>> volumes;
+                List<TVolume> volumes;
                 if (!m_volumes.TryGetValue(layer, out volumes))
                 {
-                    volumes = new List<Volume<TProfile, TManager>>();
+                    volumes = new List<TVolume>();
                     m_volumes.Add(layer, volumes);
                 }
                 volumes.Add(volume);
@@ -28,11 +29,11 @@ namespace Framework.Volumes
             }
         }
 
-        public void Deregister(Volume<TProfile, TManager> volume, VolumeLayer layer)
+        public void Deregister(TVolume volume, VolumeLayer layer)
         {
             if (layer != null)
             {
-                List<Volume<TProfile, TManager>> volumes;
+                List<TVolume> volumes;
                 if (m_volumes.TryGetValue(layer, out volumes))
                 {
                     volumes.Remove(volume);
@@ -45,30 +46,29 @@ namespace Framework.Volumes
             m_sortNeeded[layer] = true;
         }
 
-        public struct WeightedProfile
+        public struct WeightedVolume
         {
-            public TProfile profile;
+            public TVolume volume;
             public float weight;
 
-            public WeightedProfile(TProfile profile, float weight)
+            public WeightedVolume(TVolume volume, float weight)
             {
-                this.profile = profile;
+                this.volume = volume;
                 this.weight = weight;
             }
         }
+        
+        private readonly List<WeightedVolume> m_weightedProfiles = new List<WeightedVolume>();
 
-        private readonly TProfile m_defaultProfile = ScriptableObject.CreateInstance<TProfile>();
-        private readonly List<WeightedProfile> m_weightedProfiles = new List<WeightedProfile>();
-
-        public List<WeightedProfile> GetProfiles(Transform trigger, VolumeLayer layer)
+        public List<WeightedVolume> GetProfiles(Transform trigger, VolumeLayer layer)
         {
             m_weightedProfiles.Clear();
-            m_weightedProfiles.Add(new WeightedProfile(m_defaultProfile, 1.0f));
 
             bool onlyGlobal = trigger == null;
             Vector3 triggerPos = onlyGlobal ? Vector3.zero : trigger.position;
             
-            List<Volume<TProfile, TManager>> volumes;
+
+            List<TVolume> volumes;
             if (!m_volumes.TryGetValue(layer, out volumes))
             {
                 return m_weightedProfiles;
@@ -76,10 +76,10 @@ namespace Framework.Volumes
             
             if (m_sortNeeded[layer])
             {
-                volumes.Sort((a, b) => a.priority.CompareTo(b.priority));
+                volumes.Sort((a, b) => a.Priority.CompareTo(b.Priority));
                 m_sortNeeded[layer] = false;
             }
-            
+
             foreach (var volume in volumes)
             {
                 if (!volume.enabled || volume.Profile == null || volume.weight <= 0)
@@ -89,7 +89,7 @@ namespace Framework.Volumes
 
                 if (volume.isGlobal)
                 {
-                    AddWeightedProfile(volume.Profile, Mathf.Clamp01(volume.weight));
+                    AddWeightedVolume(new WeightedVolume(volume, Mathf.Clamp01(volume.weight)));
                     continue;
                 }
 
@@ -125,16 +125,16 @@ namespace Framework.Volumes
                     interpFactor = 1f - (closestDistanceSqr / blendDistSqr);
                 }
 
-                AddWeightedProfile(volume.Profile, interpFactor * Mathf.Clamp01(volume.weight));
+                AddWeightedVolume(new WeightedVolume(volume, interpFactor * Mathf.Clamp01(volume.weight)));
             }
 
             m_weightedProfiles.Sort((a, b) => a.weight.CompareTo(b.weight));
             return m_weightedProfiles;
         }
 
-        private void AddWeightedProfile(TProfile profile, float weight)
+        private void AddWeightedVolume(WeightedVolume volume)
         {
-            if (weight >= 1f)
+            if (volume.weight >= 1f)
             {
                 // all lower priority profiles are overridden
                 m_weightedProfiles.Clear();
@@ -142,15 +142,15 @@ namespace Framework.Volumes
             else
             {
                 // reduce the weighting of lower priority profiles
-                float oneMinusWeight = 1f - weight;
+                float oneMinusWeight = 1f - volume.weight;
                 for (int i = 0; i < m_weightedProfiles.Count; i++)
                 {
-                    WeightedProfile p = m_weightedProfiles[i];
+                    WeightedVolume p = m_weightedProfiles[i];
                     p.weight *= oneMinusWeight;
                     m_weightedProfiles[i] = p;
                 }
             }
-            m_weightedProfiles.Add(new WeightedProfile(profile, weight));
+            m_weightedProfiles.Add(volume);
         }
     }
 }
