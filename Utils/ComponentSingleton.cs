@@ -28,6 +28,7 @@ namespace Framework
                         if (m_instance == null && !m_isQuitting)
                         {
                             m_instance = new GameObject(typeof(T).Name + " (Generated)").AddComponent<T>();
+                            DontDestroyOnLoad(m_instance.gameObject);
                         }
                     }
                 }
