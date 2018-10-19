@@ -64,10 +64,14 @@ namespace Framework.Volumes
         {
             m_weightedProfiles.Clear();
 
+            if (layer == null)
+            {
+                return m_weightedProfiles;
+            }
+
             bool onlyGlobal = trigger == null;
             Vector3 triggerPos = onlyGlobal ? Vector3.zero : trigger.position;
             
-
             List<TVolume> volumes;
             if (!m_volumes.TryGetValue(layer, out volumes))
             {
@@ -128,7 +132,7 @@ namespace Framework.Volumes
                 AddWeightedVolume(new WeightedVolume(volume, interpFactor * Mathf.Clamp01(volume.weight)));
             }
 
-            m_weightedProfiles.Sort((a, b) => a.weight.CompareTo(b.weight));
+            m_weightedProfiles.Sort((a, b) => b.weight.CompareTo(a.weight));
             return m_weightedProfiles;
         }
 

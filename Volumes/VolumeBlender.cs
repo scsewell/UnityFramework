@@ -11,5 +11,18 @@ namespace Framework.Volumes
         [SerializeField]
         [Tooltip("The transform from which to get the position used for the volume blending calculations.")]
         protected Transform m_target;
+
+        protected virtual void Awake()
+        {
+            if (m_layer == null)
+            {
+                Debug.LogWarning($"Volume blender \"{name}\" does not have a layer assigned. This volume blender will do nothing.");
+            }
+
+            if (m_target == null)
+            {
+                m_target = transform;
+            }
+        }
     }
 }
