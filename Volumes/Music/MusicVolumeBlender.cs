@@ -17,11 +17,11 @@ namespace Framework.Volumes
         private readonly HashSet<MusicPlayer> m_active = new HashSet<MusicPlayer>();
         private readonly List<MusicPlayer> m_sources = new List<MusicPlayer>();
 
-        private void Update()
+        protected override void UpdateBlending(Transform target, VolumeLayer layer)
         {
             m_active.Clear();
 
-            var profiles = MusicVolumeManager.Instance.GetProfiles(m_target, m_layer);
+            var profiles = MusicVolumeManager.Instance.GetProfiles(target, layer);
 
             for (int i = 0; i < profiles.Count; i++)
             {

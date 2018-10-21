@@ -13,11 +13,11 @@ namespace Framework.Volumes
         private readonly HashSet<AudioSource> m_active = new HashSet<AudioSource>();
         private readonly List<AudioSource> m_sources = new List<AudioSource>();
 
-        private void Update()
+        protected override void UpdateBlending(Transform target, VolumeLayer layer)
         {
             m_active.Clear();
 
-            var profiles = AudioVolumeManager.Instance.GetProfiles(m_target, m_layer);
+            var profiles = AudioVolumeManager.Instance.GetProfiles(target, layer);
             
             for (int i = 0; i < profiles.Count; i++)
             {
@@ -44,15 +44,21 @@ namespace Framework.Volumes
                         m_sources.Add(source);
                     }
 
-                    m_active.Add(source);
-                    
                     // set the volume based on the weight
                     float vol = volume.volume * profileBlend.weight;
                     if (!source.isPlaying && vol > 0)
                     {
                         source.Play();
                     }
+
+                    // if other volumes are aleady weighting in this sound add to it
+                    if (m_active.Contains(source))
+                    {
+                        vol += source.volume;
+                    }
                     source.volume = vol;
+
+                    m_active.Add(source);
                 }
             }
 

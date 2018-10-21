@@ -139,7 +139,7 @@ namespace Framework.Volumes
             }
         }
 
-        private void OnDrawGizmos()
+        protected void DrawGizmos()
         {
             if (isGlobal)
             {
