@@ -4,10 +4,9 @@ using UnityEngine;
 
 namespace Framework.Volumes
 {
-    public abstract class Volume<TProfile, TVolume, TManager> : MonoBehaviour
-        where TProfile : ScriptableObject
-        where TVolume : Volume<TProfile, TVolume, TManager>
-        where TManager : VolumeManager<TProfile, TVolume, TManager>, new()
+    public abstract class Volume<TVolume, TManager> : MonoBehaviour
+        where TVolume : Volume<TVolume, TManager>
+        where TManager : VolumeManager<TVolume, TManager>, new()
     {
         private const string VOLUME_LAYER_NAME = "Volumes";
         
@@ -33,42 +32,12 @@ namespace Framework.Volumes
         [Range(0f, 1f)]
         public float weight = 1f;
 
-        [Header("Profile")]
-
-        [SerializeField]
-        [Tooltip("The profile for this volume.")]
-        private TProfile m_sharedProfile;
-
         private readonly List<Collider> m_colliders = new List<Collider>();
         public List<Collider> Colliders => m_colliders;
 
         public int Priority => m_priority;
         public VolumeLayer Layer => m_layer;
-
-        private TProfile m_profile;
-        public TProfile Profile
-        {
-            get
-            {
-                if (m_profile == null)
-                {
-                    if (m_sharedProfile != null)
-                    {
-                        m_profile = m_sharedProfile;
-                    }
-                    else
-                    {
-                        m_profile = ScriptableObject.CreateInstance<TProfile>();
-                    }
-                }
-                return m_profile;
-            }
-            set
-            {
-                m_profile = value;
-            }
-        }
-
+        
         private void Reset()
         {
             int volumeLayer = LayerMask.NameToLayer(VOLUME_LAYER_NAME);

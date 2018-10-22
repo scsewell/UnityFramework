@@ -2,9 +2,16 @@
 
 namespace Framework.Volumes
 {
-    public class MusicVolume : Volume<MusicParams, MusicVolume, MusicVolumeManager>
+    public class MusicVolume : Volume<MusicVolume, MusicVolumeManager>
     {
+        [Header("Profile")]
+
+        [SerializeField]
+        [Tooltip("The profile for this volume.")]
+        public MusicParams m_sharedProfile;
+        
         [Range(0f, 1f)]
+        [Tooltip("The profile for this volume.")]
         public float volume = 1f;
 
 #if UNITY_EDITOR
@@ -17,7 +24,7 @@ namespace Framework.Volumes
 #endif
     }
 
-    public class MusicVolumeManager : VolumeManager<MusicParams, MusicVolume, MusicVolumeManager>
+    public class MusicVolumeManager : VolumeManager<MusicVolume, MusicVolumeManager>
     {
     }
 }

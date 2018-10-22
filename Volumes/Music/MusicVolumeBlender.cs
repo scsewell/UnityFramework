@@ -27,7 +27,7 @@ namespace Framework.Volumes
             {
                 var profileBlend = profiles[i];
                 var volume = profileBlend.volume;
-                var profile = volume.Profile;
+                var profile = volume.m_sharedProfile;
 
                 if (profile != null)
                 {

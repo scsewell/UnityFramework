@@ -2,8 +2,12 @@
 
 namespace Framework.Volumes
 {
-    public class AudioVolume : Volume<AudioVolumeProfile, AudioVolume, AudioVolumeManager>
+    public class AudioVolume : Volume<AudioVolume, AudioVolumeManager>
     {
+        [SerializeField]
+        [Tooltip("The profile for this volume.")]
+        public AudioVolumeProfile m_sharedProfile;
+
         [Range(0f, 1f)]
         public float volume = 1f;
         
@@ -17,7 +21,7 @@ namespace Framework.Volumes
 #endif
     }
 
-    public class AudioVolumeManager : VolumeManager<AudioVolumeProfile, AudioVolume, AudioVolumeManager>
+    public class AudioVolumeManager : VolumeManager<AudioVolume, AudioVolumeManager>
     {
     }
 }

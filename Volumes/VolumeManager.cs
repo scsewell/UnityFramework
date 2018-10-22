@@ -3,10 +3,9 @@ using UnityEngine;
 
 namespace Framework.Volumes
 {
-    public abstract class VolumeManager<TProfile, TVolume, TManager> 
-        where TProfile : ScriptableObject
-        where TVolume : Volume<TProfile, TVolume, TManager>
-        where TManager : VolumeManager<TProfile, TVolume, TManager>, new()
+    public abstract class VolumeManager<TVolume, TManager> 
+        where TVolume : Volume<TVolume, TManager>
+        where TManager : VolumeManager<TVolume, TManager>, new()
     {
         private static readonly TManager m_instance = new TManager();
         public static TManager Instance => m_instance;
@@ -86,7 +85,7 @@ namespace Framework.Volumes
 
             foreach (var volume in volumes)
             {
-                if (!volume.enabled || volume.Profile == null || volume.weight <= 0)
+                if (!volume.enabled || volume.weight <= 0)
                 {
                     continue;
                 }
@@ -129,7 +128,7 @@ namespace Framework.Volumes
                     interpFactor = 1f - (closestDistanceSqr / blendDistSqr);
                 }
 
-                AddWeightedVolume(new WeightedVolume(volume, interpFactor * Mathf.Clamp01(volume.weight)));
+                AddWeightedVolume(new WeightedVolume(volume, Mathf.SmoothStep(0f, 1f, interpFactor) * Mathf.Clamp01(volume.weight)));
             }
 
             m_weightedProfiles.Sort((a, b) => b.weight.CompareTo(a.weight));
