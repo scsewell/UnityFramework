@@ -51,7 +51,7 @@ namespace Framework.Volumes
             }
         }
 
-        private void Awake()
+        protected virtual void Awake()
         {
             if (m_layer == null)
             {
