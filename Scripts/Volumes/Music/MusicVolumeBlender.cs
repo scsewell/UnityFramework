@@ -20,7 +20,13 @@ namespace Framework.Volumes
         protected override void UpdateBlending(Transform target, VolumeLayer layer)
         {
             m_active.Clear();
-
+            
+            foreach (MusicPlayer source in m_sources)
+            {
+                source.Volume = 0f;
+            }
+            
+            // get volume weights
             var profiles = MusicVolumeManager.Instance.GetProfiles(target, layer);
 
             for (int i = 0; i < profiles.Count; i++)
@@ -29,12 +35,14 @@ namespace Framework.Volumes
                 var volume = profileBlend.volume;
                 var profile = volume.m_sharedProfile;
 
-                if (profile != null)
+                if (profile != null && profile.Track != null)
                 {
                     MusicPlayer source;
                     if (!m_profileToSources.TryGetValue(profile, out source))
                     {
                         source = new MusicPlayer(gameObject, m_pausable);
+                        source.Volume = 0f;
+
                         m_profileToSources.Add(profile, source);
                         m_sources.Add(source);
                     }
@@ -47,7 +55,7 @@ namespace Framework.Volumes
                     {
                         source.Play(profile);
                     }
-                    source.Volume = vol;
+                    source.Volume += vol;
                 }
             }
 

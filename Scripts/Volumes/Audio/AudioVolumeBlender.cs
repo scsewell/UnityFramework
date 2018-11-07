@@ -18,7 +18,12 @@ namespace Framework.Volumes
             m_active.Clear();
 
             var profiles = AudioVolumeManager.Instance.GetProfiles(target, layer);
-            
+
+            foreach (AudioSource source in m_sources)
+            {
+                source.volume = 0f;
+            }
+
             for (int i = 0; i < profiles.Count; i++)
             {
                 var profileBlend = profiles[i];
@@ -40,9 +45,13 @@ namespace Framework.Volumes
                         source.panStereo = profile.pan;
                         source.spatialBlend = 0f;
 
+                        source.volume = 0f;
+
                         m_profileToSources.Add(profile, source);
                         m_sources.Add(source);
                     }
+
+                    m_active.Add(source);
 
                     // set the volume based on the weight
                     float vol = volume.volume * profileBlend.weight;
@@ -50,15 +59,7 @@ namespace Framework.Volumes
                     {
                         source.Play();
                     }
-
-                    // if other volumes are aleady weighting in this sound add to it
-                    if (m_active.Contains(source))
-                    {
-                        vol += source.volume;
-                    }
-                    source.volume = vol;
-
-                    m_active.Add(source);
+                    source.volume += vol;
                 }
             }
 
