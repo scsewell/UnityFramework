@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using UnityEngine;
 
 namespace Framework.IO
@@ -13,6 +14,11 @@ namespace Framework.IO
         {
             m_index = 0;
             m_data = data;
+        }
+
+        public int GetReadPointer()
+        {
+            return m_index;
         }
 
         public void SetReadPointer(int index)
@@ -49,7 +55,7 @@ namespace Framework.IO
 
         private static T[] Read<T>(byte[] data, ref int index, T[] vals)
         {
-            int len = (vals.Length * Marshal.SizeOf(typeof(T)));
+            int len = vals.Length * Marshal.SizeOf(typeof(T));
 
             GCHandle handle = GCHandle.Alloc(vals, GCHandleType.Pinned);
             try
@@ -71,6 +77,12 @@ namespace Framework.IO
         /*
          * Wrapper methods to handle common types.
          */
+
+        private byte[] m_byteBuffer = new byte[1];
+        public byte ReadByte()
+        {
+            return ReadValue(m_byteBuffer);
+        }
 
         private int[] m_intBuffer = new int[1];
         public int ReadInt()
@@ -96,6 +108,16 @@ namespace Framework.IO
             return ReadValue(m_doubleBuffer);
         }
 
+        public bool ReadBool()
+        {
+            return ReadByte() == 1;
+        }
+
+        public string ReadString()
+        {
+            return Encoding.ASCII.GetString(ReadArray<byte>());
+        }
+
         public Vector2 ReadVector2()
         {
             return new Vector2(ReadFloat(), ReadFloat());
@@ -109,6 +131,26 @@ namespace Framework.IO
         public Quaternion ReadQuaternion()
         {
             return new Quaternion(ReadFloat(), ReadFloat(), ReadFloat(), ReadFloat());
+        }
+
+        public bool[] ReadBoolArray()
+        {
+            bool[] vals = new bool[ReadInt()];
+            for (int i = 0; i < vals.Length; i++)
+            {
+                vals[i] = ReadBool();
+            }
+            return vals;
+        }
+
+        public string[] ReadStringArray()
+        {
+            string[] vals = new string[ReadInt()];
+            for (int i = 0; i < vals.Length; i++)
+            {
+                vals[i] = ReadString();
+            }
+            return vals;
         }
     }
 }
