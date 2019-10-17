@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 
+using Framework.Audio;
+
 namespace Framework.Volumes
 {
     public class MusicVolume : Volume<MusicVolume, MusicVolumeManager>
