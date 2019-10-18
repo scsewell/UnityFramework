@@ -37,7 +37,7 @@ namespace Framework.Audio
         private bool m_pausable = true;
 
         /// <summary>
-        /// Will the music stop while the game is paused.
+        /// Will the music pause while the audio listener is paused.
         /// </summary>
         public bool Pausable
         {
@@ -59,6 +59,11 @@ namespace Framework.Audio
         /// </summary>
         public bool IsPlaying => m_sources[0].isPlaying || m_sources[1].isPlaying;
 
+        /// <summary>
+        /// Creates a new music player.
+        /// </summary>
+        /// <param name="gameObject">The object to add the audio components onto.</param>
+        /// <param name="pauseable">Will the music pause while the audio listener is paused.</param>
         public MusicPlayer(GameObject gameObject, bool pauseable = true)
         {
             m_go = gameObject;
@@ -82,6 +87,9 @@ namespace Framework.Audio
             }
         }
 
+        /// <summary>
+        /// Updates the music player.
+        /// </summary>
         public void Update()
         {
             EnsureNotDisposed();
@@ -112,17 +120,29 @@ namespace Framework.Audio
         }
 
         /// <summary>
-        /// Resumes the music.
+        /// Stops playing music.
+        /// </summary>
+        public void Stop()
+        {
+            EnsureNotDisposed();
+
+            m_sources[0].Stop();
+            m_sources[1].Stop();
+
+            m_currentTrack = null;
+            m_sources[0].clip = null;
+            m_sources[1].clip = null;
+        }
+
+        /// <summary>
+        /// Resumes the music if paused.
         /// </summary>
         public void Resume()
         {
             EnsureNotDisposed();
 
-            if (m_currentTrack != null)
-            {
-                m_sources[0].UnPause();
-                m_sources[1].UnPause();
-            }
+            m_sources[0].UnPause();
+            m_sources[1].UnPause();
         }
 
         /// <summary>
@@ -136,25 +156,15 @@ namespace Framework.Audio
             m_sources[1].Pause();
         }
 
-        /// <summary>
-        /// Stops playing music.
-        /// </summary>
-        public void Stop()
-        {
-            EnsureNotDisposed();
-
-            m_currentTrack = null;
-            m_sources[0].Stop();
-            m_sources[1].Stop();
-        }
-
         private void PlayScheduled(double time)
         {
             int source = (m_lastMusicSource + 1) % m_sources.Length;
             AudioSource music = m_sources[source];
+
             music.clip = m_currentTrack.Track;
             music.outputAudioMixerGroup = m_currentTrack.Mixer;
             music.PlayScheduled(time);
+
             m_lastLoopTime = time;
             m_lastMusicSource = source;
         }
