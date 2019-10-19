@@ -3,7 +3,7 @@ using UnityEngine.Audio;
 
 namespace Framework.Volumes
 {
-    [CreateAssetMenu(fileName = "AudioProfile", menuName = "Volumes/Audio", order = 50)]
+    [CreateAssetMenu(fileName = "New Audio Profile", menuName = "Framework/Volumes/Audio", order = 50)]
     public class AudioVolumeProfile : ScriptableObject
     {
         public AudioClip clip;

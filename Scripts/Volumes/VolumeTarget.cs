@@ -2,7 +2,7 @@
 
 namespace Framework.Volumes
 {
-    [CreateAssetMenu(fileName = "VolumeTarget", menuName = "Volumes/Target", order = 2)]
+    [CreateAssetMenu(fileName = "New Volume Target", menuName = "Framework/Volumes/Target", order = 2)]
     public class VolumeTarget : ScriptableObject
     {
         private Transform m_target = null;

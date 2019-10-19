@@ -26,8 +26,8 @@ namespace Framework.InputManagement
             get { return m_nameToAxis; }
         }
 
-        private Settings m_settings;
-        public Settings Settings
+        private SettingCollection m_settings;
+        public SettingCollection Settings
         {
             get { return m_settings; }
         }
@@ -60,7 +60,7 @@ namespace Framework.InputManagement
             m_nameToButton = new Dictionary<string, BufferedButton>();
             m_nameToAxis = new Dictionary<string, BufferedAxis>();
 
-            m_settings = new Settings();
+            m_settings = new SettingCollection();
         }
         
         public void LateFixedUpdate()

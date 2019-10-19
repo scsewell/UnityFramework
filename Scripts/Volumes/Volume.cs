@@ -14,7 +14,7 @@ namespace Framework.Volumes
         
         [SerializeField]
         [Tooltip("The layer used by this volume.")]
-        private VolumeLayer m_layer;
+        private VolumeLayer m_layer = null;
 
         [SerializeField]
         [Tooltip("A global volume is applied to the whole scene.")]

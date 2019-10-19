@@ -6,7 +6,7 @@ namespace Framework.Audio
     public class AudioClipSet : ScriptableObject
     {
         [SerializeField]
-        private AudioClip[] m_clips;
+        private AudioClip[] m_clips = null;
 
         public AudioClip PickClip() => m_clips.PickRandom();
     }

@@ -6,11 +6,11 @@ namespace Framework.Volumes
     {
         [SerializeField]
         [Tooltip("The layer defining which volumes to affect the blending for this source.")]
-        private VolumeLayer m_layer;
+        private VolumeLayer m_layer = null;
 
         [SerializeField]
         [Tooltip("The target from which to get the position used for the blending. If null this transform is used.")]
-        private VolumeTarget m_target;
+        private VolumeTarget m_target = null;
         
         protected virtual void Awake()
         {
