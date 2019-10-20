@@ -1,85 +1,125 @@
 ﻿using System;
 
-namespace Framework.SettingManagement
+using UnityEngine;
+
+namespace Framework.Settings
 {
-    public class Setting<T> : ISetting
+    /// <summary>
+    /// The base class for settings.
+    /// </summary>
+    public abstract class Setting : ScriptableObject
     {
-        private string m_name;
-        public string Name
-        {
-            get { return m_name; }
-        }
+        [SerializeField]
+        [Tooltip("The category this setting is grouped by.")]
+        private SettingCategory m_category = null;
+        public SettingCategory Category => m_category;
 
-        private T m_defaultValue;
-        public T DefaultValue
-        {
-            get { return m_defaultValue; }
-        }
+        [SerializeField]
+        [Tooltip("Does changing this setting require restarting the engine.")]
+        private bool m_requiresRestart = false;
 
-        private T m_value;
-        public T Value
-        {
-            get { return m_value; }
-            set { m_value = value; }
-        }
+        [SerializeField]
+        [Tooltip("How the setting should be selected in the user interface.")]
+        private SettingDisplayMode m_displayMode = SettingDisplayMode.Spinner;
 
-        private DisplayOptions m_displayOptions;
-        public DisplayOptions DisplayOptions
-        {
-            get { return m_displayOptions; }
-        }
+        [SerializeField]
+        [Tooltip("The value used until settings are loaded or if deserializtion fails.")]
+        protected string m_defaultValue = null;
 
-        private Action<T> m_apply;
-        private Func<T, string> m_serialize;
-        private Func<string, T> m_deserialize;
+        protected string m_serializedValue = null;
 
         /// <summary>
-        /// Constructs a new settings object.
+        /// Initializes this setting.
         /// </summary>
-        /// <param name="name">The name used for retrieving settings and for display.</param>
-        /// <param name="defaultValue">The default value used until changed.</param>
-        /// <param name="serialize">The function that serializes the value.</param>
-        /// <param name="deserialize">The function that deserializes the value.</param>
-        /// <param name="apply">The action taken when all settings are applied.</param>
-        /// <param name="displayOptions">Determines how the setting is displayed in a settings menu.</param>
-        public Setting(string name, T defaultValue, Func<T, string> serialize, Func<string, T> deserialize, Action<T> apply, DisplayOptions displayOptions)
+        public virtual void Iniialize()
         {
-            m_name = name;
-            m_defaultValue = defaultValue;
-            m_apply = apply;
-            m_serialize = serialize;
-            m_deserialize = deserialize;
-            m_displayOptions = displayOptions;
-
-            UseDefaultValue();
+            m_serializedValue = m_defaultValue;
         }
 
-        public void Apply()
+        /// <summary>
+        /// The serialized setting value.
+        /// </summary>
+        public string SerializedValue => m_serializedValue;
+
+        /// <summary>
+        /// Sets this setting from a serialized value.
+        /// </summary>
+        /// <param name="newValue">The new value.</param>
+        public abstract void SetSerializedValue(string newValue);
+    }
+
+    /// <summary>
+    /// The base class for settings.
+    /// </summary>
+    /// <typeparam name="T">The type used to store the setting.</typeparam>
+    public abstract class Setting<T> : Setting
+    {
+        /// <summary>
+        /// Called when the value of this setting has changed.
+        /// </summary>
+        public event Action<T> OnValueChanged;
+
+        private T m_value = default;
+
+        /// <summary>
+        /// The value of this setting.
+        /// </summary>
+        public T Value
         {
-            if (m_apply != null)
+            get => m_value;
+            set
             {
-                m_apply(m_value);
+                T validated = Sanitize(value);
+
+                // only update if the value has changed
+                if (!m_value.Equals(validated))
+                {
+                    m_value = validated;
+                    m_serializedValue = Serialize(validated);
+
+                    OnValueChanged?.Invoke(validated);
+                }
             }
         }
 
-        public void UseDefaultValue()
+        /// <summary>
+        /// Sets this setting from a serialized value.
+        /// </summary>
+        /// <param name="newValue">The new value.</param>
+        public override void SetSerializedValue(string newValue)
         {
-            m_value = m_defaultValue;
+            if (Deserialize(m_serializedValue, out T value))
+            {
+                Value = value;
+            }
+            else
+            {
+                Debug.LogError($"Failed to deserialize \"{SerializedValue}\" for setting \"{name}\"!");
+            }
         }
 
-        public string Serialize()
+        /// <summary>
+        /// Processing a setting value to make sure it is valid.
+        /// </summary>
+        /// <param name="newValue">The value to validate.</param>
+        /// <returns>The processed value/</returns>
+        public virtual T Sanitize(T newValue)
         {
-            return m_serialize(m_value);
+            return newValue;
         }
 
-        public void Deserialize(string value)
-        {
-            m_value = m_deserialize(value);
-        }
+        /// <summary>
+        /// Gets a string representation of this setting's value.
+        /// </summary>
+        /// <param name="value">The value to deserialize.</param>
+        public abstract string Serialize(T value);
 
-        public bool IsOfType(Type type)
-        {
-            return typeof(T).Equals(type);
-        }
+        /// <summary>
+        /// Sets the value of this setting from a serialized value.
+        /// </summary>
+        /// <param name="serialized">The serialized value.</param>
+        /// <param name="value">The deserialized value.</param>
+        /// <returns>True if the deserialization was successful.</returns>
+        public abstract bool Deserialize(string serialized, out T value);
     }
 }

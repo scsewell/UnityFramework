@@ -8,7 +8,7 @@ namespace Framework.SettingManagement
     /// <summary>
     /// Manages a collection of setting for the application. Is able to serialize and deserialize the relevant values.
     /// </summary>
-    public class Settings
+    public class SettingCollection
     {
         private Dictionary<string, List<ISetting>> m_categoryToSettings;
         public Dictionary<string, List<ISetting>> CategoryToSettings
@@ -21,7 +21,7 @@ namespace Framework.SettingManagement
             get { return m_categoryToSettings.Keys.ToList(); }
         }
 
-        public Settings()
+        public SettingCollection()
         {
             m_categoryToSettings = new Dictionary<string, List<ISetting>>();
         }

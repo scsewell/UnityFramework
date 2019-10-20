@@ -6,7 +6,7 @@ namespace Framework.SettingManagement
     {
         public Dictionary<string, Dictionary<string, string>> categoryToSettings = new Dictionary<string, Dictionary<string, string>>();
         
-        public SerializableSettings Serialize(Settings settings)
+        public SerializableSettings Serialize(SettingCollection settings)
         {
             foreach (string category in settings.CategoryToSettings.Keys)
             {
@@ -21,7 +21,7 @@ namespace Framework.SettingManagement
             return this;
         }
 
-        public bool Deserialize(Settings settings)
+        public bool Deserialize(SettingCollection settings)
         {
             try
             {
