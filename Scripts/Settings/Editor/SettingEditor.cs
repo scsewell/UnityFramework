@@ -150,9 +150,13 @@ namespace Framework.Settings
 
             serializedObject.ApplyModifiedProperties();
 
-            Rect rect = EditorGUILayout.GetControlRect();
-            rect = EditorGUI.PrefixLabel(rect, new GUIContent(m_defaultValue.displayName, m_defaultValue.tooltip));
-            SettingValueDrawer.DrawSettingValueSelector(rect, target as Setting, m_defaultValue);
+            // only allow selecting a default value if it will be valid
+            if (target is Setting setting && !setting.IsRuntime)
+            {
+                Rect rect = EditorGUILayout.GetControlRect();
+                rect = EditorGUI.PrefixLabel(rect, new GUIContent(m_defaultValue.displayName, m_defaultValue.tooltip));
+                SettingValueDrawer.DrawSettingValueSelector(rect, setting, m_defaultValue);
+            }
 
             serializedObject.ApplyModifiedProperties();
         }

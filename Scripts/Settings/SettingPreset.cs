@@ -29,7 +29,14 @@ namespace Framework.Settings
         /// </summary>
         public void Apply()
         {
-            m_setting.SetSerializedValue(m_value);
+            if (m_setting.IsRuntime)
+            {
+                m_setting.SetSerializedValue(m_value);
+            }
+            else
+            {
+                Debug.LogWarning($"Present cannot be applied to setting \"{m_setting}\", it is configured at runtime!");
+            }
         }
     }
 }

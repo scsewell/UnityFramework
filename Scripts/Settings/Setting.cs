@@ -15,7 +15,7 @@ namespace Framework.Settings
         public SettingCategory Category => m_category;
 
         [SerializeField]
-        [Tooltip("Does changing this setting require restarting the engine.")]
+        [Tooltip("Changing this setting requires restarting the engine.")]
         private bool m_requiresRestart = false;
 
         [SerializeField]
@@ -29,9 +29,14 @@ namespace Framework.Settings
         protected string m_serializedValue = null;
 
         /// <summary>
+        /// Are the permitted values for this setting determined at runtime.
+        /// </summary>
+        public virtual bool IsRuntime => false;
+
+        /// <summary>
         /// Initializes this setting.
         /// </summary>
-        public virtual void Iniialize()
+        public virtual void Initialize()
         {
             m_serializedValue = m_defaultValue;
         }

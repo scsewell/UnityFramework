@@ -69,7 +69,7 @@ namespace Framework.Settings
                 }
                 default:
                 {
-                    Debug.LogError($"Unsupported setting type: {setting.GetType().Name}!");
+                    EditorGUI.LabelField(rect, "Not Configurable");
                     break;
                 }
             }
