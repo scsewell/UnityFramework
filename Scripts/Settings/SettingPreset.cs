@@ -31,11 +31,11 @@ namespace Framework.Settings
         {
             if (m_setting.IsRuntime)
             {
-                m_setting.SetSerializedValue(m_value);
+                Debug.LogWarning($"Present cannot be applied to setting \"{m_setting.name}\", it is configured at runtime!");
             }
             else
             {
-                Debug.LogWarning($"Present cannot be applied to setting \"{m_setting}\", it is configured at runtime!");
+                m_setting.SetSerializedValue(m_value);
             }
         }
     }

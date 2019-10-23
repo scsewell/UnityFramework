@@ -15,18 +15,18 @@ namespace Framework.Settings
         public SettingCategory Category => m_category;
 
         [SerializeField]
-        [Tooltip("Changing this setting requires restarting the engine.")]
-        private bool m_requiresRestart = false;
-
-        [SerializeField]
         [Tooltip("How the setting should be selected in the user interface.")]
         private SettingDisplayMode m_displayMode = SettingDisplayMode.Spinner;
+        public SettingDisplayMode DisplayMode => m_displayMode;
 
         [SerializeField]
         [Tooltip("The value used until settings are loaded or if deserializtion fails.")]
         protected string m_defaultValue = null;
 
-        protected string m_serializedValue = null;
+        /// <summary>
+        /// The serialized setting value.
+        /// </summary>
+        public string SerializedValue { get; protected set; } = null;
 
         /// <summary>
         /// Are the permitted values for this setting determined at runtime.
@@ -34,23 +34,40 @@ namespace Framework.Settings
         public virtual bool IsRuntime => false;
 
         /// <summary>
+        /// The options to show when using a dropdown or spinner display mode.
+        /// </summary>
+        public abstract string[] DisplayValues { get; }
+
+        /// <summary>
         /// Initializes this setting.
         /// </summary>
         public virtual void Initialize()
         {
-            m_serializedValue = m_defaultValue;
+            SerializedValue = m_defaultValue;
         }
-
-        /// <summary>
-        /// The serialized setting value.
-        /// </summary>
-        public string SerializedValue => m_serializedValue;
 
         /// <summary>
         /// Sets this setting from a serialized value.
         /// </summary>
         /// <param name="newValue">The new value.</param>
         public abstract void SetSerializedValue(string newValue);
+
+        /// <summary>
+        /// Checks if this setting is valid.
+        /// </summary>
+        /// <returns>True if the setting is valid.</returns>
+        public virtual bool Validate()
+        {
+            bool valid = true;
+
+            if (m_category == null)
+            {
+                Debug.LogError($"Setting \"{name}\" needs to be assigned a category!");
+                valid = false;
+            }
+
+            return valid;
+        }
     }
 
     /// <summary>
@@ -62,7 +79,7 @@ namespace Framework.Settings
         /// <summary>
         /// Called when the value of this setting has changed.
         /// </summary>
-        public event Action<T> OnValueChanged;
+        public event Action<T> OnValueChanged = delegate { };
 
         private T m_value = default;
 
@@ -77,14 +94,23 @@ namespace Framework.Settings
                 T validated = Sanitize(value);
 
                 // only update if the value has changed
-                if (!m_value.Equals(validated))
+                if (!Equals(m_value, validated))
                 {
                     m_value = validated;
-                    m_serializedValue = Serialize(validated);
+                    SerializedValue = Serialize(validated);
 
                     OnValueChanged?.Invoke(validated);
                 }
             }
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // load the default value
+            OnValueChanged = delegate { };
+            Deserialize(SerializedValue, out m_value);
         }
 
         /// <summary>
@@ -93,7 +119,7 @@ namespace Framework.Settings
         /// <param name="newValue">The new value.</param>
         public override void SetSerializedValue(string newValue)
         {
-            if (Deserialize(m_serializedValue, out T value))
+            if (Deserialize(newValue, out T value))
             {
                 Value = value;
             }

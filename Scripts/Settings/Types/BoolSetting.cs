@@ -1,27 +1,29 @@
-﻿using System.Collections.Generic;
-
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Framework.Settings
 {
     [CreateAssetMenu(fileName = "New Bool Setting", menuName = "Framework/Settings/Bool", order = 1)]
     public class BoolSetting : Setting<bool>
     {
-        private static readonly Dictionary<bool, string> DISPLAY_NAMES = new Dictionary<bool, string>()
+        private static readonly string[] DISPLAY_VALUES = new string[]
         {
-            { true, "On" },
-            { false, "Off" },
+            "On",
+            "Off",
         };
+
+        public override string[] DisplayValues => DISPLAY_VALUES;
 
         public override bool Deserialize(string serialized, out bool value)
         {
-            foreach (bool key in DISPLAY_NAMES.Keys)
+            if (serialized == DISPLAY_VALUES[0])
             {
-                if (serialized == DISPLAY_NAMES[key])
-                {
-                    value = key;
-                    return true;
-                }
+                value = true;
+                return true;
+            }
+            if (serialized == DISPLAY_VALUES[1])
+            {
+                value = false;
+                return true;
             }
 
             value = default;
@@ -30,7 +32,7 @@ namespace Framework.Settings
 
         public override string Serialize(bool value)
         {
-            return DISPLAY_NAMES[value];
+            return value ? DISPLAY_VALUES[0] : DISPLAY_VALUES[1];
         }
     }
 }

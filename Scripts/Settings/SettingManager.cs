@@ -15,7 +15,7 @@ using Framework.IO;
 namespace Framework.Settings
 {
     /// <summary>
-    /// Manages the settings for an application.
+    /// Manages the settings for the application.
     /// </summary>
     [CreateAssetMenu(fileName = "SettingManager", menuName = "Framework/Settings/SettingManager", order = 80)]
     public class SettingManager : ScriptableObject
@@ -49,6 +49,7 @@ namespace Framework.Settings
             }
         }
 
+
         [SerializeField]
         [Tooltip("Will all settings in the project automatically be added to the setting list.")]
         private bool m_autoAddSettings = true;
@@ -62,31 +63,55 @@ namespace Framework.Settings
         [Reorderable]
         private SettingList m_settings = new SettingList();
 
-        private readonly Dictionary<SettingCategory, List<Setting>> m_categoryToSetting = new Dictionary<SettingCategory, List<Setting>>();
+        private bool m_initialized = false;
+        private List<SettingCategory> m_categories = null;
+        private Dictionary<SettingCategory, List<Setting>> m_categoryToSettings = null;
+
+        /// <summary>
+        /// The categories the settings are grouped by.
+        /// </summary>
+        public IReadOnlyList<SettingCategory> Catergories => m_categories as IReadOnlyList<SettingCategory>;
 
 
         [RuntimeInitializeOnLoadMethod]
         private static void InitializeOnLoad()
         {
-            // after awake is called initialize the settings
+            Instance.Initialize();
+        }
+
+        private void OnEnable()
+        {
+#if UNITY_EDITOR
+            m_initialized = false;
+#endif
             Instance.Initialize();
         }
 
         /// <summary>
         /// Prepares the initial settings.
         /// </summary>
-        private void Initialize()
+        public void Initialize()
         {
+            if (m_initialized)
+            {
+                return;
+            }
+
             // get the grouping of setting by category
-            m_categoryToSetting.Clear();
+            m_categories = new List<SettingCategory>();
+            m_categoryToSettings = new Dictionary<SettingCategory, List<Setting>>();
 
             for (int i = 0; i < m_settings.Length; i++)
             {
+                SettingCategory category = m_settings[i].Category;
+
                 List<Setting> settings;
-                if (!m_categoryToSetting.TryGetValue(m_settings[i].Category, out settings))
+                if (!m_categoryToSettings.TryGetValue(category, out settings))
                 {
+                    m_categories.Add(category);
+
                     settings = new List<Setting>();
-                    m_categoryToSetting.Add(m_settings[i].Category, settings);
+                    m_categoryToSettings.Add(category, settings);
                 }
 
                 settings.Add(m_settings[i]);
@@ -95,38 +120,27 @@ namespace Framework.Settings
             // prepare all the settings
             foreach (Setting setting in m_settings)
             {
-                if (setting != null)
-                {
-                    setting.Initialize();
-                }
-                else
-                {
-                    Debug.LogWarning("SettingManager has a null setting!");
-                }
+                setting.Initialize();
             }
+
+            m_initialized = true;
 
             // try to load the saved settings
             Load();
         }
 
-        [Serializable]
-        public struct SerializedSettings
+        /// <summary>
+        /// Gets the settings that belong to a category.
+        /// </summary>
+        /// <param name="category">The category to get the settings for.</param>
+        /// <returns>The settings list for the category.</returns>
+        public IReadOnlyList<Setting> GetSettings(SettingCategory category)
         {
-            public List<SerializedCategory> categories;
-        }
-
-        [Serializable]
-        public struct SerializedCategory
-        {
-            public string name;
-            public List<SerializedSetting> settings;
-        }
-
-        [Serializable]
-        public struct SerializedSetting
-        {
-            public string name;
-            public string value;
+            if (category != null && m_categoryToSettings.TryGetValue(category, out List<Setting> settings))
+            {
+                return settings as IReadOnlyList<Setting>;
+            }
+            return null;
         }
 
         /// <summary>
@@ -138,23 +152,7 @@ namespace Framework.Settings
 
             if (FileIO.ReadFileText(path, out string json))
             {
-                SerializedSettings settings = JsonUtility.FromJson<SerializedSettings>(json);
-
-                foreach (SerializedCategory category in settings.categories)
-                {
-                    foreach (SerializedSetting setting in category.settings)
-                    {
-                        // if there is a setting matching the serialized one apply its value
-                        foreach (Setting s in m_settings)
-                        {
-                            if (s.name == setting.name && s.Category.name == category.name)
-                            {
-                                s.SetSerializedValue(setting.value);
-                                break;
-                            }
-                        }
-                    }
-                }
+                SettingSerializer.FromJson(json, m_settings);
 
                 Debug.Log("Loaded settings");
             }
@@ -169,36 +167,9 @@ namespace Framework.Settings
         /// </summary>
         public void Save()
         {
-            // get a json representation of the settings
-            SerializedSettings serializedSettings = new SerializedSettings()
-            {
-                categories = new List<SerializedCategory>(m_categoryToSetting.Count),
-            };
-
-            foreach (var pair in m_categoryToSetting)
-            {
-                SerializedCategory serializedCategory = new SerializedCategory()
-                {
-                    name = pair.Key.name,
-                    settings = new List<SerializedSetting>(pair.Value.Count),
-                };
-
-                foreach (Setting setting in pair.Value)
-                {
-                    serializedCategory.settings.Add(new SerializedSetting()
-                    {
-                        name = setting.name,
-                        value = setting.SerializedValue,
-                    });
-                }
-            }
-
-            string json = JsonUtility.ToJson(serializedSettings, true);
-
-            // write the file
             string path = Path.Combine(FileIO.GetConfigDirectory(), FILE_NAME);
 
-            if (FileIO.WriteFile(path, json))
+            if (FileIO.WriteFile(path, SettingSerializer.ToJson(m_categoryToSettings)))
             {
                 Debug.Log("Saved settings");
             }
@@ -219,11 +190,12 @@ namespace Framework.Settings
         {
             switch (state)
             {
-                case PlayModeStateChange.ExitingEditMode:
+                case PlayModeStateChange.EnteredPlayMode:
                 {
                     if (Instance != null && Instance.m_autoAddSettings)
                     {
                         Instance.AddAllSettings();
+                        Instance.ValidateSettings();
                     }
                     break;
                 }
@@ -234,7 +206,7 @@ namespace Framework.Settings
         /// Adds a setting to the settings included in the build.
         /// </summary>
         /// <param name="setting">The setting to add.</param>
-        public void AddSetting(Setting setting)
+        private void AddSetting(Setting setting)
         {
             if (m_autoAddSettings && !m_settings.Contains(setting))
             {
@@ -256,14 +228,6 @@ namespace Framework.Settings
 
                 RemoveDuplicateSettings();
                 RemoveEmptySettings();
-            }
-
-            foreach (Setting setting in m_settings)
-            {
-                if (setting.Category == null)
-                {
-                    Debug.LogError($"Setting \"{setting.name}\" needs to be assigned a category!");
-                }
             }
         }
 
@@ -302,6 +266,25 @@ namespace Framework.Settings
                     i++;
                 }
             }
+        }
+        
+        /// <summary>
+        /// Checks if all settings are valid.
+        /// </summary>
+        /// <returns>True if the settings are valid.</returns>
+        public bool ValidateSettings()
+        {
+            bool valid = true;
+            
+            foreach (Setting setting in m_settings)
+            {
+                if (!setting.Validate())
+                {
+                    valid = false;
+                }
+            }
+            
+            return valid;
         }
 #endif
     }

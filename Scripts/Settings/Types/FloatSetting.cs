@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+
+using UnityEngine;
 
 namespace Framework.Settings
 {
@@ -14,6 +16,28 @@ namespace Framework.Settings
         /// The max value allowed.
         /// </summary>
         public override float Max => m_range.Max;
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            List<string> values = new List<string>();
+
+            float num = Min;
+            while (num <= Max)
+            {
+                if (values.Count == MAX_DISPLAY_VALUES)
+                {
+                    Debug.LogError($"Setting \"{name}\" has too many display values!");
+                    break;
+                }
+
+                values.Add(num.ToString());
+                num += m_increment;
+            }
+
+            m_displayValues = values.ToArray();
+        }
 
         public override float Sanitize(float newValue)
         {

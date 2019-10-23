@@ -5,6 +5,8 @@ namespace Framework.Settings
     [CreateAssetMenu(fileName = "New String Setting", menuName = "Framework/Settings/String", order = 5)]
     public class StringSetting : Setting<string>
     {
+        public override string[] DisplayValues => new string[0];
+
         public override bool Deserialize(string serialized, out string value)
         {
             if (serialized != null)

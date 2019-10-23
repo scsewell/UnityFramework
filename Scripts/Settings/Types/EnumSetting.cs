@@ -44,21 +44,23 @@ namespace Framework.Settings
 
         private string[] m_displayValues = null;
 
-        /// <summary>
-        /// The display options for the enum values.
-        /// </summary>
-        public string[] DisplayValues
+        public override string[] DisplayValues
         {
             get
             {
-#if !UNITY_EDITOR
-                if (m_displayValues == null)
-#endif
-                {
-                    m_displayValues = m_values.Select(m => m.displayName).ToArray();
-                }
+#if UNITY_EDITOR
+                return m_values.Select(m => m.displayName).ToArray();
+#else
                 return m_displayValues;
+#endif
             }
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            m_displayValues = m_values.Select(m => m.displayName).ToArray();
         }
 
         public override bool Deserialize(string serialized, out Enum value)
@@ -109,6 +111,30 @@ namespace Framework.Settings
             }
 
             return null;
+        }
+
+        public override bool Validate()
+        {
+            bool valid = base.Validate();
+
+            if (Type == null)
+            {
+                Debug.LogError($"Setting \"{name}\" needs an enum type assigned!");
+                valid = false;
+            }
+            else
+            {
+                for (int i = 0; i < m_values.Length; i++)
+                {
+                    if (string.IsNullOrWhiteSpace(m_values[i].displayName))
+                    {
+                        Debug.LogError($"Setting \"{name}\" needs a mapping for enum value \"{m_values[i].enumName}\"!");
+                        valid = false;
+                    }
+                }
+            }
+
+            return valid;
         }
 
         /// <summary>

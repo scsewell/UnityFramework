@@ -133,7 +133,7 @@ namespace Framework.Settings
                         }
                         else
                         {
-                            displayName.stringValue = string.Empty;
+                            displayName.stringValue = enumName.stringValue;
                         }
 
                         EditorGUILayout.BeginHorizontal();

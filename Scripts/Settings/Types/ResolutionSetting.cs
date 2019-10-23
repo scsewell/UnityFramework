@@ -26,6 +26,8 @@ namespace Framework.Settings
         /// </summary>
         public override bool IsRuntime => true;
 
+        public override string[] DisplayValues => m_displayValues;
+
         public override void Initialize()
         {
             // get all unique resolution sizes
