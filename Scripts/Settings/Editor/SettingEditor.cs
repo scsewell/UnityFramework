@@ -13,7 +13,6 @@ namespace Framework.Settings
     public class SettingEditor : Editor
     {
         protected SerializedProperty m_category = null;
-        protected SerializedProperty m_requiresRestart = null;
         protected SerializedProperty m_displayMode = null;
         protected SerializedProperty m_defaultValue = null;
 
@@ -28,7 +27,6 @@ namespace Framework.Settings
         protected virtual void OnEnable()
         {
             m_category          = serializedObject.FindProperty("m_category");
-            m_requiresRestart   = serializedObject.FindProperty("m_requiresRestart");
             m_displayMode       = serializedObject.FindProperty("m_displayMode");
             m_defaultValue      = serializedObject.FindProperty("m_defaultValue");
 
@@ -49,7 +47,6 @@ namespace Framework.Settings
             serializedObject.Update();
 
             EditorGUILayout.PropertyField(m_category);
-            EditorGUILayout.PropertyField(m_requiresRestart);
             EditorGUILayout.PropertyField(m_displayMode);
 
             if (m_range != null)
