@@ -32,7 +32,9 @@ namespace Framework.Settings
         {
             get
             {
-#if !UNITY_EDITOR
+#if UNITY_EDITOR
+                if (!string.IsNullOrEmpty(m_enumType))
+#else
                 if (m_type == null)
 #endif
                 {

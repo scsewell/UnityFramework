@@ -30,7 +30,7 @@ namespace Framework.Settings
 
         protected float SnapToRange(float value)
         {
-            return Mathf.Round(m_range.Clamp(value) / m_increment) * m_increment;
+            return m_range.Clamp(Mathf.Round(value / m_increment) * m_increment);
         }
     }
 }

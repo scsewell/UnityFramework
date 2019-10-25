@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Framework.SettingManagement;
 
 namespace Framework.InputManagement
 {
@@ -7,7 +6,6 @@ namespace Framework.InputManagement
     {
         public Dictionary<string, List<ISource<bool>>> namesToButtonSources = new Dictionary<string, List<ISource<bool>>>();
         public Dictionary<string, List<ISource<float>>> namesToAxisSources = new Dictionary<string, List<ISource<float>>>();
-        public SerializableSettings controlSettings;
         
         public SerializableControls Serialize(Controls controls)
         {
@@ -19,7 +17,6 @@ namespace Framework.InputManagement
             {
                 namesToAxisSources.Add(name, controls.NameToAxis[name].Sources);
             }
-            controlSettings = controls.Settings.Serialize();
             return this;
         }
 
@@ -37,7 +34,7 @@ namespace Framework.InputManagement
                     controls.NameToAxis[name].Sources = namesToAxisSources[name];
                 }
 
-                return controls.Settings.Deserialize(controlSettings);
+                return true;
             }
             catch
             {

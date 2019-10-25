@@ -42,6 +42,8 @@ namespace Framework.Settings
         /// </summary>
         public void Apply()
         {
+            Debug.Log($"Applying setting preset \"{name}\"");
+
             foreach (SettingPreset preset in m_presets)
             {
                 preset.Apply();

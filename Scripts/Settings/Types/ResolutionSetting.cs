@@ -14,12 +14,12 @@ namespace Framework.Settings
         /// <summary>
         /// The smallest resolution supported.
         /// </summary>
-        public Resolution MinSupported => m_resolutions.Last();
+        public Resolution MinSupported => m_resolutions.First();
 
         /// <summary>
         /// The largest resolution supported.
         /// </summary>
-        public Resolution MaxSupported => m_resolutions.First();
+        public Resolution MaxSupported => m_resolutions.Last();
 
         /// <summary>
         /// Are the permitted values for this setting determined at runtime.
@@ -45,8 +45,6 @@ namespace Framework.Settings
                 }
             }
 
-            // list largest resolutions first, they are more relevant
-            resolutions.Reverse();
             m_resolutions = resolutions.ToArray();
             m_displayValues = resolutions.Select(r => Serialize(r)).ToArray();
 

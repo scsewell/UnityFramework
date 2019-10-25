@@ -29,9 +29,8 @@ namespace Framework.Settings
                 if (!preloadedAssets.Contains(SettingManager.Instance))
                 {
                     preloadedAssets.Add(SettingManager.Instance);
+                    PlayerSettings.SetPreloadedAssets(preloadedAssets.ToArray());
                 }
-
-                PlayerSettings.SetPreloadedAssets(preloadedAssets.ToArray());
             }
         }
     }

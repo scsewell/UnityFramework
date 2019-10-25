@@ -2,7 +2,6 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Framework.SettingManagement;
 
 namespace Framework.InputManagement
 {
@@ -24,12 +23,6 @@ namespace Framework.InputManagement
         public Dictionary<string, BufferedAxis> NameToAxis
         {
             get { return m_nameToAxis; }
-        }
-
-        private SettingCollection m_settings;
-        public SettingCollection Settings
-        {
-            get { return m_settings; }
         }
 
         private bool m_isMuted = false;
@@ -59,8 +52,6 @@ namespace Framework.InputManagement
             m_axes = new List<BufferedAxis>();
             m_nameToButton = new Dictionary<string, BufferedButton>();
             m_nameToAxis = new Dictionary<string, BufferedAxis>();
-
-            m_settings = new SettingCollection();
         }
         
         public void LateFixedUpdate()
@@ -97,7 +88,6 @@ namespace Framework.InputManagement
         {
             m_buttons.ForEach(s => s.UseDefaults());
             m_axes.ForEach(s => s.UseDefaults());
-            m_settings.UseDefaults();
         }
 
         public void AddButton(string name, string displayName, bool canRebind, bool canBeMuted, params ISource<bool>[] defaultBindings)
