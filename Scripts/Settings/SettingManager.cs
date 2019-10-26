@@ -8,8 +8,6 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-using Malee;
-
 using Framework.IO;
 
 namespace Framework.Settings
@@ -60,7 +58,7 @@ namespace Framework.Settings
         }
 
         [SerializeField]
-        [Reorderable]
+        [Reorderable(singleLine = true)]
         private SettingList m_settings = new SettingList();
 
         private bool m_initialized = false;
@@ -83,8 +81,11 @@ namespace Framework.Settings
         {
 #if UNITY_EDITOR
             m_initialized = false;
+            if (Application.isPlaying)
 #endif
-            Instance.Initialize();
+            { 
+                Instance.Initialize();
+            }
         }
 
         /// <summary>

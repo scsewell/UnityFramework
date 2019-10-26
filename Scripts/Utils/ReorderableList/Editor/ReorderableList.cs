@@ -2,13 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 using UnityEditor;
 using UnityEngine;
 
-namespace Malee.Editor {
-
-	public class ReorderableList {
-
+namespace Framework
+{
+	public class ReorderableList
+    {
 		private const float ELEMENT_EDGE_TOP = 1;
 		private const float ELEMENT_EDGE_BOT = 3;
 		private const float ELEMENT_HEIGHT_OFFSET = ELEMENT_EDGE_TOP + ELEMENT_EDGE_BOT;

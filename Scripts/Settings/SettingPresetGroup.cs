@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-using Malee;
+using Framework;
 
 namespace Framework.Settings
 {
@@ -19,7 +19,7 @@ namespace Framework.Settings
         }
 
         [SerializeField]
-        [Reorderable]
+        [Reorderable(singleLine = true)]
         private PresetList m_presets = null;
 
         /// <summary>
