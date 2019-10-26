@@ -2,137 +2,138 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Malee.Editor {
+namespace Malee.Editor
+{
+    [CustomPropertyDrawer(typeof(ReorderableAttribute))]
+    public class ReorderableDrawer : PropertyDrawer
+    {
+        public const string ARRAY_PROPERTY_NAME = "array";
 
-	[CustomPropertyDrawer(typeof(ReorderableAttribute))]
-	public class ReorderableDrawer : PropertyDrawer {
+        private static Dictionary<int, ReorderableList> lists = new Dictionary<int, ReorderableList>();
 
-		public const string ARRAY_PROPERTY_NAME = "array";
+        public override bool CanCacheInspectorGUI(SerializedProperty property)
+        {
+            return false;
+        }
 
-		private static Dictionary<int, ReorderableList> lists = new Dictionary<int, ReorderableList>();
+        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            ReorderableList list = GetList(property, attribute as ReorderableAttribute, ARRAY_PROPERTY_NAME);
 
-		public override bool CanCacheInspectorGUI(SerializedProperty property) {
+            return list != null ? list.GetHeight() : EditorGUIUtility.singleLineHeight;
+        }
 
-			return false;
-		}
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            ReorderableList list = GetList(property, attribute as ReorderableAttribute, ARRAY_PROPERTY_NAME);
 
-		public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {
+            if (list != null)
+            {
+                list.DoList(EditorGUI.IndentedRect(position), label);
+            }
+            else
+            {
 
-			ReorderableList list = GetList(property, attribute as ReorderableAttribute, ARRAY_PROPERTY_NAME);
+                GUI.Label(position, "Array must extend from ReorderableArray", EditorStyles.label);
+            }
+        }
 
-			return list != null ? list.GetHeight() : EditorGUIUtility.singleLineHeight;
-		}
+        public static int GetListId(SerializedProperty property)
+        {
+            if (property != null)
+            {
+                int h1 = property.serializedObject.targetObject.GetHashCode();
+                int h2 = property.propertyPath.GetHashCode();
 
-		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
+                return (((h1 << 5) + h1) ^ h2);
+            }
 
-			ReorderableList list = GetList(property, attribute as ReorderableAttribute, ARRAY_PROPERTY_NAME);
+            return 0;
+        }
 
-			if (list != null) {
+        public static ReorderableList GetList(SerializedProperty property, string arrayPropertyName)
+        {
+            return GetList(property, null, GetListId(property), arrayPropertyName);
+        }
 
-				list.DoList(EditorGUI.IndentedRect(position), label);
-			}
-			else {
+        public static ReorderableList GetList(SerializedProperty property, ReorderableAttribute attrib, string arrayPropertyName)
+        {
+            return GetList(property, attrib, GetListId(property), arrayPropertyName);
+        }
 
-				GUI.Label(position, "Array must extend from ReorderableArray", EditorStyles.label);
-			}
-		}
+        public static ReorderableList GetList(SerializedProperty property, int id, string arrayPropertyName)
+        {
+            return GetList(property, null, id, arrayPropertyName);
+        }
 
-		public static int GetListId(SerializedProperty property) {
+        public static ReorderableList GetList(SerializedProperty property, ReorderableAttribute attrib, int id, string arrayPropertyName)
+        {
+            if (property == null)
+            {
+                return null;
+            }
 
-			if (property != null) {
+            ReorderableList list = null;
+            SerializedProperty array = property.FindPropertyRelative(arrayPropertyName);
 
-				int h1 = property.serializedObject.targetObject.GetHashCode();
-				int h2 = property.propertyPath.GetHashCode();
+            if (array != null && array.isArray)
+            {
+                if (!lists.TryGetValue(id, out list))
+                {
+                    if (attrib != null)
+                    {
+                        Texture icon = !string.IsNullOrEmpty(attrib.elementIconPath) ? AssetDatabase.GetCachedIcon(attrib.elementIconPath) : null;
 
-				return (((h1 << 5) + h1) ^ h2);
-			}
+                        ReorderableList.ElementDisplayType displayType = attrib.singleLine ? ReorderableList.ElementDisplayType.SingleLine : ReorderableList.ElementDisplayType.Auto;
 
-			return 0;
-		}
+                        list = new ReorderableList(array, attrib.add, attrib.remove, attrib.draggable, displayType, attrib.elementNameProperty, attrib.elementNameOverride, icon);
+                        list.paginate = attrib.paginate;
+                        list.pageSize = attrib.pageSize;
+                        list.sortable = attrib.sortable;
 
-		public static ReorderableList GetList(SerializedProperty property, string arrayPropertyName) {
+                        //handle surrogate if any
 
-			return GetList(property, null, GetListId(property), arrayPropertyName);
-		}
+                        if (attrib.surrogateType != null)
+                        {
+                            SurrogateCallback callback = new SurrogateCallback(attrib.surrogateProperty);
 
-		public static ReorderableList GetList(SerializedProperty property, ReorderableAttribute attrib, string arrayPropertyName) {
+                            list.surrogate = new ReorderableList.Surrogate(attrib.surrogateType, callback.SetReference);
+                        }
+                    }
+                    else
+                    {
+                        list = new ReorderableList(array, true, true, true);
+                    }
 
-			return GetList(property, attrib, GetListId(property), arrayPropertyName);
-		}
+                    lists.Add(id, list);
+                }
+                else
+                {
+                    list.List = array;
+                }
+            }
 
-		public static ReorderableList GetList(SerializedProperty property, int id, string arrayPropertyName) {
+            return list;
+        }
 
-			return GetList(property, null, id, arrayPropertyName);
-		}
+        private struct SurrogateCallback
+        {
+            private string property;
 
-		public static ReorderableList GetList(SerializedProperty property, ReorderableAttribute attrib, int id, string arrayPropertyName) {
+            internal SurrogateCallback(string property)
+            {
+                this.property = property;
+            }
 
-			if (property == null) {
+            internal void SetReference(SerializedProperty element, Object objectReference, ReorderableList list)
+            {
+                SerializedProperty prop = !string.IsNullOrEmpty(property) ? element.FindPropertyRelative(property) : null;
 
-				return null;
-			}
-
-			ReorderableList list = null;
-			SerializedProperty array = property.FindPropertyRelative(arrayPropertyName);
-
-			if (array != null && array.isArray) {
-
-				if (!lists.TryGetValue(id, out list)) {
-
-					if (attrib != null) {
-
-						Texture icon = !string.IsNullOrEmpty(attrib.elementIconPath) ? AssetDatabase.GetCachedIcon(attrib.elementIconPath) : null;
-
-						ReorderableList.ElementDisplayType displayType = attrib.singleLine ? ReorderableList.ElementDisplayType.SingleLine : ReorderableList.ElementDisplayType.Auto;
-
-						list = new ReorderableList(array, attrib.add, attrib.remove, attrib.draggable, displayType, attrib.elementNameProperty, attrib.elementNameOverride, icon);
-						list.paginate = attrib.paginate;
-						list.pageSize = attrib.pageSize;
-						list.sortable = attrib.sortable;
-
-						//handle surrogate if any
-
-						if (attrib.surrogateType != null) {
-
-							SurrogateCallback callback = new SurrogateCallback(attrib.surrogateProperty);
-
-							list.surrogate = new ReorderableList.Surrogate(attrib.surrogateType, callback.SetReference);
-						}
-					}
-					else {
-
-						list = new ReorderableList(array, true, true, true);
-					}
-
-					lists.Add(id, list);
-				}
-				else {
-
-					list.List = array;
-				}
-			}
-
-			return list;
-		}
-
-		private struct SurrogateCallback {
-
-			private string property;
-
-			internal SurrogateCallback(string property) {
-
-				this.property = property;
-			}
-
-			internal void SetReference(SerializedProperty element, Object objectReference, ReorderableList list) {
-
-				SerializedProperty prop = !string.IsNullOrEmpty(property) ? element.FindPropertyRelative(property) : null;
-
-				if (prop != null && prop.propertyType == SerializedPropertyType.ObjectReference) {
-
-					prop.objectReferenceValue = objectReference;
-				}
-			}
-		}
-	}
+                if (prop != null && prop.propertyType == SerializedPropertyType.ObjectReference)
+                {
+                    prop.objectReferenceValue = objectReference;
+                }
+            }
+        }
+    }
 }
