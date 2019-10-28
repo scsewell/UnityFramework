@@ -71,27 +71,23 @@ namespace Framework.Settings
         public IReadOnlyList<SettingCategory> Catergories => m_categories as IReadOnlyList<SettingCategory>;
 
 
-        [RuntimeInitializeOnLoadMethod]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeOnLoad()
         {
             Instance.Initialize();
         }
 
+#if UNITY_EDITOR
         private void OnEnable()
         {
-#if UNITY_EDITOR
             m_initialized = false;
-            if (Application.isPlaying)
-#endif
-            { 
-                Instance.Initialize();
-            }
         }
+#endif
 
         /// <summary>
         /// Prepares the initial settings.
         /// </summary>
-        public void Initialize()
+        private void Initialize()
         {
             if (m_initialized)
             {
