@@ -99,7 +99,7 @@ namespace Framework.Audio
                 double nextLoopTime = m_lastLoopTime + m_currentTrack.LoopDuration;
 
                 // if near the end of the current loop start the next one
-                if (nextLoopTime - AudioSettings.dspTime < 1.0)
+                if (nextLoopTime - AudioSettings.dspTime < 0.1)
                 {
                     PlayScheduled(nextLoopTime);
                 }

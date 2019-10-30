@@ -26,7 +26,7 @@ namespace Framework.IO
             try
             {
                 DirectoryInfo dir = new DirectoryInfo(directory);
-                return dir.GetFiles('*' + extention);
+                return dir.Exists ? dir.GetFiles('*' + extention) : new FileInfo[0];
             }
             catch (Exception e)
             {
@@ -47,7 +47,7 @@ namespace Framework.IO
             {
                 FileInfo file = new FileInfo(path);
 
-                if (!Directory.Exists(file.DirectoryName))
+                if (!file.Directory.Exists)
                 {
                     Directory.CreateDirectory(file.DirectoryName);
                 }
@@ -74,7 +74,7 @@ namespace Framework.IO
             {
                 FileInfo file = new FileInfo(path);
 
-                if (!Directory.Exists(file.DirectoryName))
+                if (!file.Directory.Exists)
                 {
                     Directory.CreateDirectory(file.DirectoryName);
                 }
@@ -161,7 +161,7 @@ namespace Framework.IO
                 case RuntimePlatform.WindowsEditor:
                     return EDITOR_CONFIGS_FOLDER;
                 default:
-                    return Path.Combine(Application.dataPath, "/../");
+                    return new DirectoryInfo(Application.dataPath).Parent.FullName;
             }
         }
     }
