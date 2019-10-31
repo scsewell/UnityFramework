@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Audio;
 
 namespace Framework.Audio
 {
@@ -9,7 +10,9 @@ namespace Framework.Audio
     {
         private readonly GameObject m_go = null;
         private readonly AudioSource[] m_sources = new AudioSource[2];
-        private MusicParams m_currentTrack = null;
+
+        private AudioMixerGroup m_mixer = null;
+        private Music m_currentTrack = null;
         private int m_lastMusicSource = 0;
         private double m_lastLoopTime = 0.0;
 
@@ -94,9 +97,9 @@ namespace Framework.Audio
         {
             EnsureNotDisposed();
 
-            if (IsPlaying && m_currentTrack != null && m_currentTrack.Loop)
+            if (IsPlaying && m_currentTrack != null && m_currentTrack.CanLoop)
             {
-                double nextLoopTime = m_lastLoopTime + m_currentTrack.LoopDuration;
+                double nextLoopTime = m_lastLoopTime + m_currentTrack.LoopTime;
 
                 // if near the end of the current loop start the next one
                 if (nextLoopTime - AudioSettings.dspTime < 0.1)
@@ -105,17 +108,19 @@ namespace Framework.Audio
                 }
             }
         }
-        
+
         /// <summary>
         /// Plays a music track.
         /// </summary>
         /// <param name="music">The music to play.</param>
-        public void Play(MusicParams music)
+        /// <param name="mixer">The mixer to play the music on.</param>
+        public void Play(Music music, AudioMixerGroup mixer = null)
         {
             Stop();
 
             if (music != null)
             {
+                m_mixer = mixer;
                 m_currentTrack = music;
                 PlayScheduled(AudioSettings.dspTime + 0.01);
             }
@@ -167,7 +172,7 @@ namespace Framework.Audio
             AudioSource music = m_sources[source];
 
             music.clip = m_currentTrack.Track;
-            music.outputAudioMixerGroup = m_currentTrack.Mixer;
+            music.outputAudioMixerGroup = m_mixer;
             music.PlayScheduled(time);
 
             m_lastLoopTime = time;

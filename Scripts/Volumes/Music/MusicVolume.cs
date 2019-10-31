@@ -10,7 +10,7 @@ namespace Framework.Volumes
 
         [SerializeField]
         [Tooltip("The profile for this volume.")]
-        public MusicParams m_sharedProfile;
+        public Music m_sharedProfile;
         
         [Range(0f, 1f)]
         [Tooltip("The profile for this volume.")]

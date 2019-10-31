@@ -16,7 +16,7 @@ namespace Framework.Volumes
         [Tooltip("Restart music tracks when they become audible.")]
         private bool m_restartWhenActivated = true;
 
-        private readonly Dictionary<MusicParams, MusicPlayer> m_profileToSources = new Dictionary<MusicParams, MusicPlayer>();
+        private readonly Dictionary<Music, MusicPlayer> m_profileToSources = new Dictionary<Music, MusicPlayer>();
         private readonly HashSet<MusicPlayer> m_active = new HashSet<MusicPlayer>();
         private readonly List<MusicPlayer> m_sources = new List<MusicPlayer>();
 
