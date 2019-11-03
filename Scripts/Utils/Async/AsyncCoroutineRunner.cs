@@ -1,8 +1,12 @@
 ﻿using UnityEngine;
 
-namespace Framework.Internal
+namespace Framework
 {
-    public class AsyncCoroutineRunner : ComponentSingleton<AsyncCoroutineRunner>
+    /// <summary>
+    /// When converting an async task to a coroutine, we need an object for unity 
+    /// to run the coroutine on. We use this singleton instance to do that.
+    /// </summary>
+    internal class AsyncCoroutineRunner : ComponentSingleton<AsyncCoroutineRunner>
     {
         protected override void Awake()
         {

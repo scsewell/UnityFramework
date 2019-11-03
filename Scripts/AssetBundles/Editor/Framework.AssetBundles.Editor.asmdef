@@ -1,0 +1,18 @@
+{
+    "name": "Framework.AssetBundles.Editor",
+    "references": [
+        "GUID:795a52fa1992d9a439d5433342c7f9aa",
+        "GUID:44b7f697e65bd6944a62a9be78900fdc"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

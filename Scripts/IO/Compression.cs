@@ -8,11 +8,9 @@ namespace Framework.IO
         public static byte[] Compress(byte[] uncompressed)
         {
             using (MemoryStream output = new MemoryStream())
+            using (DeflateStream dstream = new DeflateStream(output, CompressionLevel.Optimal, true))
             {
-                using (DeflateStream dstream = new DeflateStream(output, CompressionLevel.Optimal, true))
-                {
-                    dstream.Write(uncompressed, 0, uncompressed.Length);
-                }
+                dstream.Write(uncompressed, 0, uncompressed.Length);
                 return output.ToArray();
             }
         }
@@ -20,15 +18,11 @@ namespace Framework.IO
         public static byte[] Decompress(byte[] compressed)
         {
             using (MemoryStream input = new MemoryStream(compressed))
+            using (MemoryStream output = new MemoryStream())
+            using (DeflateStream dstream = new DeflateStream(input, CompressionMode.Decompress))
             {
-                using (MemoryStream output = new MemoryStream())
-                {
-                    using (DeflateStream dstream = new DeflateStream(input, CompressionMode.Decompress))
-                    {
-                        dstream.CopyTo(output);
-                    }
-                    return output.ToArray();
-                }
+                dstream.CopyTo(output);
+                return output.ToArray();
             }
         }
     }

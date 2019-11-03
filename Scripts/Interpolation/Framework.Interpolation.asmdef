@@ -1,0 +1,15 @@
+{
+    "name": "Framework.Interpolation",
+    "references": [
+        "GUID:b06f75a97055fbc4fb17f72ecfb1de49"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

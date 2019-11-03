@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Threading;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace Framework
 {
+    /// <summary>
+    /// Utilities for managing threading contexts.
+    /// </summary>
     public static class ContextUtils
     {
         /// <summary>
@@ -19,8 +23,8 @@ namespace Framework
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Initialize()
         {
-            UnitySynchronizationContext = SynchronizationContext.Current;
             UnityThreadId = Thread.CurrentThread.ManagedThreadId;
+            UnitySynchronizationContext = SynchronizationContext.Current;
         }
 
         /// <summary>
@@ -42,6 +46,20 @@ namespace Framework
             {
                 UnitySynchronizationContext.Post(_ => action(), null);
             }
+        }
+
+        /// <summary>
+        /// Checks if the caller is the main thread.
+        /// </summary>
+        /// <returns>True if on the main thread.</returns>
+        public static bool EnsureMainThread([CallerMemberName] string callerName = "")
+        {
+            if (Thread.CurrentThread.ManagedThreadId != UnityThreadId)
+            {
+                Debug.LogError($"{callerName} should only be called by the main thread!");
+                return false;
+            }
+            return true;
         }
     }
 }

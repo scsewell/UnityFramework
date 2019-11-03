@@ -1,0 +1,16 @@
+{
+    "name": "Framework.AssetBundles",
+    "references": [
+        "GUID:b06f75a97055fbc4fb17f72ecfb1de49",
+        "GUID:3fbce8ef6896a5c4f90051df422d46f6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

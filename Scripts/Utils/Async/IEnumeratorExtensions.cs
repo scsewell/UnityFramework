@@ -8,8 +8,6 @@ using System.Runtime.ExceptionServices;
 using System.Text;
 using UnityEngine;
 
-using Framework.Internal;
-
 namespace Framework
 {
     public static class IEnumeratorExtensions
