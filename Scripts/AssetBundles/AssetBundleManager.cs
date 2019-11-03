@@ -74,16 +74,36 @@ namespace Framework.AssetBundles
         /// The period in seconds for which the bundle manager will wait before checking for unused bundles. 
         /// </summary>
         public static float AutoUnloadPeriod { get; set; } = 5.0f;
-        
+
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void InitEarly()
+        {
+            // Automatically register the default bundle paths prior to loading the game
+            RegisterBundleDirectory(MainBundlePath, 0);
+            RegisterBundleDirectory(ModBundlePath, 100);
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void InitUnload()
+        private static void InitLate()
         {
             // Periodically check if there are any bundles to unload
             if (AutoUnloadBundles)
             {
                 UnloadUsedBundlesAsync();
             }
+
+            // close all asset bundles on quit
+            Application.quitting += () =>
+            {
+                foreach (BundleData bundle in m_loadedBundles)
+                {
+                    bundle.Dispose();
+                }
+
+                m_loadedBundles.Clear();
+                m_nameToBundle.Clear();
+            };
         }
 
         private static async void UnloadUsedBundlesAsync()
@@ -100,8 +120,6 @@ namespace Framework.AssetBundles
         /// </summary>
         public static void UnloadUnusedBundles()
         {
-            m_bundlesToRemove.Clear();
-
             // check which bundles are not needed
             foreach (BundleData bundle in m_loadedBundles)
             {
@@ -116,15 +134,11 @@ namespace Framework.AssetBundles
             {
                 m_loadedBundles.Remove(bundle);
                 m_nameToBundle.Remove(bundle.bundleName);
+                
+                bundle.Dispose();
             }
-        }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void InitDirectories()
-        {
-            // Automatically register the default bundle paths prior to loading the game
-            RegisterBundleDirectory(MainBundlePath, 0);
-            RegisterBundleDirectory(ModBundlePath, 100);
+            m_bundlesToRemove.Clear();
         }
 
         /// <summary>
@@ -228,7 +242,7 @@ namespace Framework.AssetBundles
         /// <summary>
         /// Loads a type of asset by name from an asset bundle at a given path.
         /// </summary>
-        /// <typeparam name="T">The type of asset to load from the bundles.</typeparam>
+        /// <typeparam name="T">The type of asset to load from the bundle.</typeparam>
         /// <param name="bundleName">The full name of the asset bundle to load the asset from.</param>
         /// <param name="assetName">The name of the asset to load from the bundle.</param>
         /// <returns>The loaded asset.</returns>
@@ -248,7 +262,33 @@ namespace Framework.AssetBundles
                 return null;
             }
 
+            // get the asset from the bundle
             return await bundle.LoadAssetAsync<T>(assetName);
+        }
+
+        /// <summary>
+        /// Loads a scene asset bundle at a given path.
+        /// </summary>
+        /// <param name="bundleName">The full name of the asset bundle to load the scene from.</param>
+        /// <returns>The path of the scene which can now be loaded, or null if no scene was found.</returns>
+        public static async Task<string> LoadSceneAsync(string bundleName)
+        {
+            // loading should only be done by the main thread
+            if (!ContextUtils.EnsureMainThread())
+            {
+                return null;
+            }
+
+            // load the bundle
+            BundleData bundle = await LoadBundleAsync(bundleName);
+
+            if (bundle == null)
+            {
+                return null;
+            }
+
+            // get the scene in the bundle
+            return bundle.GetScene();
         }
 
         /// <summary>

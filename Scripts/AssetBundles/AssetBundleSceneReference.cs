@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using System;
 using System.Threading.Tasks;
 
 using UnityEngine;
@@ -9,18 +9,11 @@ using UnityEditor;
 
 namespace Framework.AssetBundles
 {
-    /// <summary>
-    /// A reference which supports referecing assets in an asset bundle.
-    /// If the asset is in a bundle, the bundle will be loaded on demand.
-    /// </summary>
-    /// <typeparam name="T">The type of object to reference.</typeparam>
-    public abstract class AssetBundleObjectReference<T> : AssetBundleReference where T : UnityEngine.Object
+    [Serializable]
+    public class AssetBundleSceneReference : AssetBundleReference
     {
         [SerializeField]
-        private string m_assetName = null;
-
-        [SerializeField]
-        private T m_asset = null;
+        private string m_scenePath = null;
 
 #if UNITY_EDITOR
         /// <summary>
@@ -35,14 +28,12 @@ namespace Framework.AssetBundles
             if (string.IsNullOrEmpty(assetPath))
             {
                 m_bundleName = null;
-                m_assetName = null;
-                m_asset = null;
+                m_scenePath = null;
                 return false;
             }
 
             // Check if the asset in in an asset bundle. If in a bundle, store
-            // the path to the asset. Otherwise, store the asset reference as 
-            // usual.
+            // the bundle name. Otherwise, store the scene path as usual.
             AssetImporter importer = AssetImporter.GetAtPath(assetPath);
 
             if (importer == null)
@@ -55,14 +46,12 @@ namespace Framework.AssetBundles
             if (isInBundle)
             {
                 m_bundleName = importer.assetBundleName;
-                m_assetName = Path.GetFileNameWithoutExtension(assetPath);
-                m_asset = null;
+                m_scenePath = null;
             }
             else
             {
                 m_bundleName = null;
-                m_assetName = null;
-                m_asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+                m_scenePath = assetPath;
             }
 
             return true;
@@ -70,14 +59,11 @@ namespace Framework.AssetBundles
 #endif
 
         /// <summary>
-        /// Gets the referenced asset.
+        /// Gets the referenced scene path.
         /// </summary>
-        public async Task<T> GetAsync()
+        public async Task<string> GetAsync()
         {
-            // We do not cache the reference to as that will prevent the managed 
-            // asset object from being garbage collected, which the bundle manager
-            // needs to detect when it is safe to unload the bundle.
-            return await AssetBundleManager.LoadAssetAsync<T>(m_bundleName, m_assetName);
+            return await AssetBundleManager.LoadSceneAsync(m_bundleName);
         }
     }
 }

@@ -8,8 +8,8 @@ using Framework.EditorTools;
 
 namespace Framework.AssetBundles
 {
-    [CustomPropertyDrawer(typeof(AssetBundleObjectReference), true)]
-    public class AssetBundleObjectReferenceEditor : PropertyDrawer
+    [CustomPropertyDrawer(typeof(AssetBundleReference), true)]
+    public class AssetBundleReferenceEditor : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -17,7 +17,20 @@ namespace Framework.AssetBundles
 
             // get the type of reference
             object[] references = SerializedObjectUtils.GetPropertyField(property);
-            Type type = references.FirstOrDefault().GetType().BaseType.GetGenericArguments().FirstOrDefault();
+
+            Type fieldType = references.FirstOrDefault().GetType();
+
+            Type type;
+            if (fieldType.IsAssignableFrom(typeof(AssetBundleSceneReference)))
+            {
+                // for scenes the type is always a scene asset
+                type = typeof(SceneAsset);
+            }
+            else
+            {
+                // we need to get the type parameter giving the asset type
+                type = fieldType.BaseType.GetGenericArguments().FirstOrDefault();
+            }
 
             // get the current reference value
             string oldGuid = assetGuid.stringValue;
@@ -50,23 +63,24 @@ namespace Framework.AssetBundles
 
             foreach (object reference in references)
             {
-                (reference as AssetBundleObjectReference).UpdateBundlePath();
+                (reference as AssetBundleReference).UpdateBundlePath();
             }
+
+            property.serializedObject.Update();
 
             // indicate if the reference is bundled
             if (!assetGuid.hasMultipleDifferentValues)
             {
+                bool isBundled = (references.First() as AssetBundleReference).IsBundled;
+
                 Rect indicatorRect = default;
                 indicatorRect.xMin = position.xMax - 15f;
                 indicatorRect.xMax = position.xMax - 5f;
                 indicatorRect.yMin = position.yMin + 4f;
                 indicatorRect.yMax = position.yMax - 4f;
 
-                bool isBundled = (references.First() as AssetBundleObjectReference).IsBundled;
                 EditorGUI.DrawRect(indicatorRect, isBundled ? Color.green : Color.red);
             }
-
-            property.serializedObject.Update();
         }
     }
 }
