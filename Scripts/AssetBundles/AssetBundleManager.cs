@@ -255,12 +255,7 @@ namespace Framework.AssetBundles
             }
 
             // load the bundle
-            BundleData bundle = await LoadBundleAsync(bundleName);
-
-            if (bundle == null)
-            {
-                return null;
-            }
+            BundleData bundle = LoadBundle(bundleName);
 
             // get the asset from the bundle
             return await bundle.LoadAssetAsync<T>(assetName);
@@ -280,15 +275,10 @@ namespace Framework.AssetBundles
             }
 
             // load the bundle
-            BundleData bundle = await LoadBundleAsync(bundleName);
-
-            if (bundle == null)
-            {
-                return null;
-            }
+            BundleData bundle = LoadBundle(bundleName);
 
             // get the scene in the bundle
-            return bundle.GetScene();
+            return await bundle.GetSceneAsync();
         }
 
         /// <summary>
@@ -296,7 +286,7 @@ namespace Framework.AssetBundles
         /// </summary>
         /// <param name="bundleName">The full name of the asset bundle to load the asset from.</param>
         /// <returns>The asset bundle, or null if no matching bundle could be loaded.</returns>
-        private static async Task<BundleData> LoadBundleAsync(string bundleName)
+        private static BundleData LoadBundle(string bundleName)
         {
             // check if this bundle is already loaded
             if (m_nameToBundle.TryGetValue(bundleName, out BundleData bundleData))
@@ -322,11 +312,8 @@ namespace Framework.AssetBundles
                 return null;
             }
 
-            // load the asset bundle
-            AssetBundle bundle = await AssetBundle.LoadFromFileAsync(file.FullName);
-
-            // keep track that the bundle was loaded
-            bundleData = new BundleData(bundleName, bundle);
+            // create the bundle information
+            bundleData = new BundleData(bundleName, file.FullName);
 
             m_loadedBundles.Add(bundleData);
             m_nameToBundle.Add(bundleName, bundleData);

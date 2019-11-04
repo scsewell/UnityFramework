@@ -19,13 +19,12 @@ namespace Framework.AssetBundles
         /// </summary>
         public readonly string bundleName;
 
-        private readonly AssetBundle m_bundle;
+        private readonly string m_filePath;
 
-        private readonly string m_scene;
-        private bool m_sceneHasBeenUnloaded;
-
-        private readonly HashSet<string> m_loadedAssets;
-        private readonly List<WeakReference> m_references;
+        private Task<AssetBundle> m_loadBundleOp = null;
+        private string m_scene = null;
+        private bool m_sceneHasBeenUnloaded = false;
+        private List<WeakReference> m_references = null;
         
         /// <summary>
         /// Get if any assets from this bundle are currently in use. 
@@ -36,7 +35,17 @@ namespace Framework.AssetBundles
             {
                 EnsureNotDisposed();
 
-                if (m_bundle.isStreamedSceneAssetBundle)
+                // If the bundle is still loading, keep it alive since
+                // nothing will have had the chance to use it yet.
+                if (!m_loadBundleOp.IsCompleted)
+                {
+                    return true;
+                }
+
+                // Get the bundle. This will not block, since we know the task has finished
+                AssetBundle bundle = m_loadBundleOp.GetAwaiter().GetResult();
+
+                if (bundle.isStreamedSceneAssetBundle)
                 {
                     // this bundle is needed until its scene is no longer loaded
                     if (!m_sceneHasBeenUnloaded)
@@ -55,6 +64,7 @@ namespace Framework.AssetBundles
                         }
                     }
                 }
+
                 return false;
             }
         }
@@ -63,38 +73,38 @@ namespace Framework.AssetBundles
         /// Creates a new bundle data instance.
         /// </summary>
         /// <param name="bundleName">The name of the asset bundle.</param>
-        /// <param name="bundle">The asset bundle.</param>
-        public BundleData(string bundleName, AssetBundle bundle)
+        /// <param name="filePath">The absolute file path of the asset bundle.</param>
+        public BundleData(string bundleName, string filePath)
         {
             this.bundleName = bundleName;
-            m_bundle = bundle;
+            m_filePath = filePath;
 
-            if (m_bundle.isStreamedSceneAssetBundle)
-            {
-                m_scene = m_bundle.GetAllScenePaths()[0];
-                m_sceneHasBeenUnloaded = false;
-
-                SceneManager.sceneUnloaded += OnSceneUnloaded;
-            }
-            else
-            {
-                m_loadedAssets = new HashSet<string>();
-                m_references = new List<WeakReference>();
-            }
-
-            Debug.Log($"Loaded asset bundle \"{bundleName}\"");
+            // start loading the bundle
+            m_loadBundleOp = LoadBundleAsync();
         }
 
         protected override void OnDispose(bool disposing)
         {
             if (disposing)
             {
-                if (m_bundle.isStreamedSceneAssetBundle)
+                // asset bundles should not be disposed until they have loaded to avoid blocking
+                if (!m_loadBundleOp.IsCompleted)
+                {
+                    Debug.LogError($"Asset bundle \"{bundleName}\" was disposed before it finished loading!");
+                }
+
+                // Synchronously wait until the bundle has been loaded before unloading it to
+                // ensure correct behaviour.
+                AssetBundle bundle = m_loadBundleOp.GetAwaiter().GetResult();
+
+                // clean up event subscriptions
+                if (bundle.isStreamedSceneAssetBundle)
                 {
                     SceneManager.sceneUnloaded -= OnSceneUnloaded;
                 }
 
-                m_bundle.Unload(true);
+                // unload the bundle and destroy all of the assets loaded from it
+                bundle.Unload(true);
 
                 Debug.Log($"Unloaded asset bundle \"{bundleName}\"");
             }
@@ -110,26 +120,24 @@ namespace Framework.AssetBundles
         {
             EnsureNotDisposed();
 
+            AssetBundle bundle = await m_loadBundleOp;
+
             // check if this bundle contains assets
-            if (m_bundle.isStreamedSceneAssetBundle)
+            if (bundle.isStreamedSceneAssetBundle)
             {
-                Debug.LogWarning($"Unable to load assets from asset bundle \"{bundleName}\", it contains scene data instead!");
+                Debug.LogError($"Unable to load assets from asset bundle \"{bundleName}\", it contains scene data instead!");
                 return null;
             }
 
             // Load the asset from the bundle. After testing the asset loading behaviour, 
             // repeated calls will reference the same managed object, as long as the bundle is
             // not unloaded.
-            T asset = await m_bundle.LoadAssetAsync<T>(assetName) as T;
+            T asset = await bundle.LoadAssetAsync<T>(assetName) as T;
 
             // Keep track that this asset is loaded. This is done using a weak reference to the 
             // asset object. We can check when the managed asset object is garbage collected, 
             // so we know when it is safe to unload the bundled asset.
-            if (!m_loadedAssets.Contains(assetName))
-            {
-                m_references.Add(new WeakReference(asset));
-                m_loadedAssets.Add(assetName);
-            }
+            m_references.Add(new WeakReference(asset));
 
             return asset;
         }
@@ -138,14 +146,16 @@ namespace Framework.AssetBundles
         /// Gets the scene contained in this asset bundle, if it contains scene data.
         /// </summary>
         /// <returns>The scene path to load, or null if there is no scene data.</returns>
-        public string GetScene()
+        public async Task<string> GetSceneAsync()
         {
             EnsureNotDisposed();
 
+            AssetBundle bundle = await m_loadBundleOp;
+
             // check if this bundle contains scene contents
-            if (!m_bundle.isStreamedSceneAssetBundle)
+            if (!bundle.isStreamedSceneAssetBundle)
             {
-                Debug.LogWarning($"Unable to load scene from asset bundle \"{bundleName}\", it contains asset data instead!");
+                Debug.LogError($"Unable to load scene from asset bundle \"{bundleName}\", it contains asset data instead!");
                 return null;
             }
 
@@ -155,7 +165,31 @@ namespace Framework.AssetBundles
             return m_scene;
         }
 
-        public override string ToString() => bundleName;
+        /// <summary>
+        /// Loads the asset bundle.
+        /// </summary>
+        private async Task<AssetBundle> LoadBundleAsync()
+        {
+            // load the asset bundle
+            AssetBundle bundle = await AssetBundle.LoadFromFileAsync(m_filePath);
+
+            // prepare to track use of the bundle
+            if (bundle.isStreamedSceneAssetBundle)
+            {
+                m_scene = bundle.GetAllScenePaths()[0];
+                m_sceneHasBeenUnloaded = false;
+
+                SceneManager.sceneUnloaded += OnSceneUnloaded;
+            }
+            else
+            {
+                m_references = new List<WeakReference>();
+            }
+
+            Debug.Log($"Loaded asset bundle \"{bundleName}\"");
+
+            return bundle;
+        }
 
         private void OnSceneUnloaded(Scene scene)
         {
@@ -164,5 +198,7 @@ namespace Framework.AssetBundles
                 m_sceneHasBeenUnloaded = true;
             }
         }
+
+        public override string ToString() => bundleName;
     }
 }
