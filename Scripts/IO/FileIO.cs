@@ -39,9 +39,9 @@ namespace Framework.IO
         /// Writes text to a file.
         /// </summary>
         /// <param name="path">The full name of the file to write.</param>
-        /// <param name="content">The content to write/</param>
+        /// <param name="contents">The content to write.</param>
         /// <returns>True if the writing was successful.</returns>
-        public static bool WriteFile(string path, string content)
+        public static bool WriteFile(string path, string contents)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace Framework.IO
                     Directory.CreateDirectory(file.DirectoryName);
                 }
 
-                File.WriteAllText(path, content);
+                File.WriteAllText(path, contents);
                 return true;
             }
             catch (Exception e)
@@ -66,9 +66,9 @@ namespace Framework.IO
         /// Writes binary data to a file.
         /// </summary>
         /// <param name="path">The full name of the file to write.</param>
-        /// <param name="content">The content to write/</param>
+        /// <param name="contents">The content to write.</param>
         /// <returns>True if the writing was successful.</returns>
-        public static bool WriteFile(string path, byte[] content)
+        public static bool WriteFile(string path, byte[] contents)
         {
             try
             {
@@ -79,7 +79,7 @@ namespace Framework.IO
                     Directory.CreateDirectory(file.DirectoryName);
                 }
 
-                File.WriteAllBytes(path, content);
+                File.WriteAllBytes(path, contents);
                 return true;
             }
             catch (Exception e)
@@ -93,9 +93,9 @@ namespace Framework.IO
         /// Reads from a file.
         /// </summary>
         /// <param name="path">The full name of the file to read.</param>
-        /// <param name="content">The read contents.</param>
+        /// <param name="contents">The file contents.</param>
         /// <returns>True if the file was successfuly read.</returns>
-        public static bool ReadFileText(string path, out string content)
+        public static bool ReadFileText(string path, out string contents)
         {
             try
             {
@@ -103,18 +103,18 @@ namespace Framework.IO
 
                 if (!file.Exists)
                 {
-                    content = null;
+                    contents = null;
                     return false;
                 }
 
-                content = File.ReadAllText(path);
+                contents = File.ReadAllText(path);
                 return true;
             }
             catch (Exception e)
             {
                 Debug.LogError($"Failed to read from \"{path}\"! {e.ToString()}");
 
-                content = null;
+                contents = null;
                 return false;
             }
         }
@@ -123,9 +123,9 @@ namespace Framework.IO
         /// Reads from a file.
         /// </summary>
         /// <param name="path">The full name of the file to read.</param>
-        /// <param name="content">The read contents.</param>
+        /// <param name="contents">The file contents.</param>
         /// <returns>True if the file was successfuly read.</returns>
-        public static bool ReadFileBytes(string path, out byte[] content)
+        public static bool ReadFileBytes(string path, out byte[] contents)
         {
             try
             {
@@ -133,18 +133,18 @@ namespace Framework.IO
 
                 if (!file.Exists)
                 {
-                    content = null;
+                    contents = null;
                     return false;
                 }
 
-                content = File.ReadAllBytes(path);
+                contents = File.ReadAllBytes(path);
                 return true;
             }
             catch (Exception e)
             {
                 Debug.LogError($"Failed to read from \"{path}\"! {e.ToString()}");
 
-                content = null;
+                contents = null;
                 return false;
             }
         }
