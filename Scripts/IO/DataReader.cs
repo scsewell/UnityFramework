@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.IO;
 
 namespace Framework.IO
 {
@@ -9,23 +10,25 @@ namespace Framework.IO
     /// </summary>
     public class DataReader : Disposable
     {
-        private readonly GCHandle m_handle;
-        private readonly IntPtr m_bufStart;
-        private readonly IntPtr m_bufEnd;
+        private readonly Stream m_stream;
+        private byte[] m_buffer;
+        private GCHandle m_handle;
+        private IntPtr m_bufStart;
+        private IntPtr m_bufEnd;
         private IntPtr m_ptr;
 
         /// <summary>
-        /// The index of the current byte relative to the start offset in the buffer.
+        /// Is the reader's data source a stream.
         /// </summary>
-        public int CurrentByte => (int)(m_ptr.ToInt64() - m_bufStart.ToInt64());
+        public bool IsStream { get; }
 
         /// <summary>
         /// The number of bytes that are left until the end of the buffer.
         /// </summary>
-        public int BytesRemaining => (int)(m_bufEnd.ToInt64() - m_ptr.ToInt64());
+        private int BytesRemaining => (int)(m_bufEnd.ToInt64() - m_ptr.ToInt64());
 
         /// <summary>
-        /// Create a data reader.
+        /// Create a data reader for a fixed buffer.
         /// </summary>
         /// <param name="buffer">The buffer to read from. Will be pinned until the reader is disposed.</param>
         /// <param name="offset">The byte array index to start reading from.</param>
@@ -45,21 +48,101 @@ namespace Framework.IO
                 throw new ArgumentOutOfRangeException(nameof(offset), offset, "Cannot exceed buffer length.");
             }
 
-            // Pin the buffer so that it can't be moved in memory by the GC.
-            // If it were moved, the pointers would be invalidated.
-            m_handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            IsStream = false;
 
-            m_bufStart = m_handle.AddrOfPinnedObject();
-            m_bufEnd = m_bufStart + buffer.Length;
-            m_ptr = m_bufStart + offset;
+            Prepare(buffer, GCHandle.Alloc(buffer, GCHandleType.Pinned), offset);
+        }
+
+        /// <summary>
+        /// Create a data reader for a stream.
+        /// </summary>
+        /// <param name="stream">The stream to read from.</param>
+        public DataReader(Stream stream)
+        {
+            // validate input
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+            if (!stream.CanRead)
+            {
+                throw new ArgumentException("Stream must be readable.", nameof(stream));
+            }
+
+            IsStream = true;
+            m_stream = stream;
+
+            byte[] buffer = new byte[4096];
+            Prepare(buffer, GCHandle.Alloc(buffer, GCHandleType.Pinned), 0);
         }
 
         protected override void OnDispose(bool disposing)
         {
             if (disposing)
             {
+                if (m_stream != null)
+                {
+                    m_stream.Close();
+                }
+
+                m_buffer = null;
                 m_handle.Free();
+
+                m_bufStart = IntPtr.Zero;
+                m_bufEnd = IntPtr.Zero;
                 m_ptr = IntPtr.Zero;
+            }
+        }
+
+        private void Prepare(byte[] buffer, GCHandle handle, int offset)
+        {
+            m_buffer = buffer;
+            m_handle = handle;
+
+            m_bufStart = m_handle.AddrOfPinnedObject();
+            m_bufEnd = m_bufStart + m_buffer.Length;
+            m_ptr = m_bufStart + offset;
+        }
+        
+        private unsafe void GetNextStreamedData(int dataSize)
+        {
+            // only streams support reading additional data
+            if (!IsStream)
+            {
+                throw new Exception("Attempted read is larger than the buffer's remaining contents!");
+            }
+
+            // Make sure the buffer is large enough to fit the entire data to read.
+            // As well, we must copy over the buffered data we have not read yet back
+            // to the start of the buffer, where we will begin reading from. Then,
+            // we read the next data from the stream until the buffer is full again.
+            int oldBytesRemaining = BytesRemaining;
+
+            if (m_buffer.Length < dataSize)
+            {
+                byte[] newBuffer = new byte[dataSize];
+                GCHandle newHandle = GCHandle.Alloc(newBuffer, GCHandleType.Pinned);
+
+                Buffer.MemoryCopy(m_ptr.ToPointer(), newHandle.AddrOfPinnedObject().ToPointer(), oldBytesRemaining, oldBytesRemaining);
+
+                m_handle.Free();
+
+                Prepare(newBuffer, newHandle, 0);
+            }
+            else
+            {
+                Buffer.MemoryCopy(m_ptr.ToPointer(), m_bufStart.ToPointer(), oldBytesRemaining, oldBytesRemaining);
+
+                Prepare(m_buffer, m_handle, 0);
+            }
+
+            // read in the streams next contents
+            int bytesRead = m_stream.Read(m_buffer, oldBytesRemaining, BytesRemaining);
+
+            // if there wasn't enough data left in the stream, report a buffer overrun
+            if (oldBytesRemaining + bytesRead < dataSize)
+            {
+                throw new Exception("Attempted read is larger than the stream's remaining contents!");
             }
         }
 
@@ -69,6 +152,11 @@ namespace Framework.IO
         /// <typeparam name="T">The type of element to read.</typeparam>
         public unsafe T Read<T>() where T : unmanaged
         {
+            if (BytesRemaining < sizeof(T))
+            {
+                GetNextStreamedData(sizeof(T));
+            }
+
             T value = *((T*)m_ptr);
             m_ptr += sizeof(T);
             return value;
@@ -98,10 +186,10 @@ namespace Framework.IO
                     // get the size of the array in bytes
                     int length = sizeof(T) * count;
 
-                    // check that there will be no buffer overrun on the source buffer
+                    // if the read overruns the buffer, try to read in more data
                     if (BytesRemaining < length)
                     {
-                        throw new ArgumentException($"Cannot read {length} bytes from buffer with only {BytesRemaining} bytes remaining.", nameof(count));
+                        GetNextStreamedData(length);
                     }
 
                     // copy the memory using an optimal method
