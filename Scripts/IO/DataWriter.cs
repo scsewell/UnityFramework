@@ -29,7 +29,7 @@ namespace Framework.IO
         /// <summary>
         /// The number of bytes that are left until the end of the buffer.
         /// </summary>
-        public int BytesRemaining => (int)(m_bufEnd.ToInt64() - m_ptr.ToInt64());
+        private int BytesRemaining => (int)(m_bufEnd.ToInt64() - m_ptr.ToInt64());
 
         /// <summary>
         /// Create a data writer on a fixed size buffer.
@@ -54,8 +54,7 @@ namespace Framework.IO
 
             IsFixedSize = true;
 
-            GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            Prepare(buffer, handle, offset);
+            Prepare(buffer, GCHandle.Alloc(buffer, GCHandleType.Pinned), offset);
         }
 
         /// <summary>
@@ -66,8 +65,7 @@ namespace Framework.IO
             IsFixedSize = false;
 
             byte[] buffer = new byte[1024];
-            GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            Prepare(buffer, handle, 0);
+            Prepare(buffer, GCHandle.Alloc(buffer, GCHandleType.Pinned), 0);
         }
 
         protected override void OnDispose(bool disposing)
@@ -83,16 +81,28 @@ namespace Framework.IO
             }
         }
 
-        private unsafe void GrowBuffer()
+        private void Prepare(byte[] buffer, GCHandle handle, int offset)
+        {
+            m_buffer = buffer;
+            m_handle = handle;
+
+            m_bufStart = m_handle.AddrOfPinnedObject();
+            m_bufEnd = m_bufStart + m_buffer.Length;
+            m_ptr = m_bufStart + offset;
+        }
+
+        private unsafe void GrowBuffer(int requiredSize)
         {
             // Only grow buffers owned by this writer. Instead report the overrun.
             if (IsFixedSize)
             {
-                throw new Exception("Attempted write would cause buffer overrun!");
+                throw new Exception("Attempted write would overrun buffer!");
             }
 
-            // create a new buffer with twice the size
-            byte[] newBuffer = new byte[2 * m_buffer.Length];
+            // create a new buffer with enough space to fit the contents
+            int newSize = Math.Max(BytesWritten + requiredSize, 2 * m_buffer.Length);
+
+            byte[] newBuffer = new byte[newSize];
             GCHandle newHandle = GCHandle.Alloc(newBuffer, GCHandleType.Pinned);
 
             // copy over the old buffer contents
@@ -104,16 +114,6 @@ namespace Framework.IO
 
             // prepare to continue writing to the new buffer
             Prepare(newBuffer, newHandle, bytesWritten);
-        }
-
-        private void Prepare(byte[] buffer, GCHandle handle, int offset)
-        {
-            m_buffer = buffer;
-            m_handle = handle;
-
-            m_bufStart = m_handle.AddrOfPinnedObject();
-            m_bufEnd = m_bufStart + m_buffer.Length;
-            m_ptr = m_bufStart + offset;
         }
 
         /// <summary>
@@ -132,7 +132,6 @@ namespace Framework.IO
             {
                 handle.Free();
             }
-
             return buffer;
         }
 
@@ -142,6 +141,11 @@ namespace Framework.IO
         /// <param name="stream">The stream to write to.</param>
         public void CopyToStream(Stream stream)
         {
+            if (!stream.CanWrite)
+            {
+                throw new ArgumentException("Stream must be writable.", nameof(stream));
+            }
+
             stream.Write(m_buffer, 0, BytesWritten);
         }
 
@@ -155,7 +159,7 @@ namespace Framework.IO
             // ensure there is enough space for the new content
             if (BytesRemaining < sizeof(T))
             {
-                GrowBuffer();
+                GrowBuffer(sizeof(T));
             }
 
             *((T*)m_ptr) = value;
@@ -181,7 +185,7 @@ namespace Framework.IO
                     // ensure there is enough space for the new content
                     if (BytesRemaining < length)
                     {
-                        GrowBuffer();
+                        GrowBuffer(length);
                     }
 
                     // start from where we last finished writting

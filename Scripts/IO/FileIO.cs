@@ -150,6 +150,36 @@ namespace Framework.IO
         }
 
         /// <summary>
+        /// Opens a file stream.
+        /// </summary>
+        /// <param name="path">The full name of the file to open.</param>
+        /// <param name="stream">The file steram.</param>
+        /// <returns>True if the file was successfuly openned.</returns>
+        public static bool OpenFileStream(string path, out FileStream stream)
+        {
+            try
+            {
+                FileInfo file = new FileInfo(path);
+
+                if (!file.Exists)
+                {
+                    stream = null;
+                    return false;
+                }
+
+                stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to open file stream at \"{path}\"! {e.ToString()}");
+
+                stream = null;
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Gets the directory where configuration file can be written.
         /// </summary>
         public static string GetConfigDirectory()
