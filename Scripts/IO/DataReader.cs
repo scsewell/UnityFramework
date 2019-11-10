@@ -74,6 +74,10 @@ namespace Framework.IO
 
             byte[] buffer = new byte[4096];
             Prepare(buffer, GCHandle.Alloc(buffer, GCHandleType.Pinned), 0);
+
+            // load the initial data from the stream
+            m_ptr = m_bufEnd;
+            GetNextStreamedData(buffer.Length, false);
         }
 
         protected override void OnDispose(bool disposing)
@@ -104,7 +108,7 @@ namespace Framework.IO
             m_ptr = m_bufStart + offset;
         }
         
-        private unsafe void GetNextStreamedData(int dataSize)
+        private unsafe void GetNextStreamedData(int dataSize, bool checkOverrun = true)
         {
             // only streams support reading additional data
             if (!IsStream)
@@ -136,11 +140,11 @@ namespace Framework.IO
                 Prepare(m_buffer, m_handle, 0);
             }
 
-            // read in the streams next contents
-            int bytesRead = m_stream.Read(m_buffer, oldBytesRemaining, BytesRemaining);
+            // read in the stream's next contents
+            int bytesRead = m_stream.Read(m_buffer, oldBytesRemaining, m_buffer.Length - oldBytesRemaining);
 
             // if there wasn't enough data left in the stream, report a buffer overrun
-            if (oldBytesRemaining + bytesRead < dataSize)
+            if (checkOverrun && oldBytesRemaining + bytesRead < dataSize)
             {
                 throw new Exception("Attempted read is larger than the stream's remaining contents!");
             }
