@@ -25,5 +25,13 @@ namespace Framework
         {
             return enumerable.ElementAtOrDefault(Random.Range(0, enumerable.Count()));
         }
+
+        public static T RemoveRandom<T>(this IList<T> list)
+        {
+            int index = Random.Range(0, list.Count);
+            T item = list[index];
+            list.RemoveAt(index);
+            return item;
+        }
     }
 }
