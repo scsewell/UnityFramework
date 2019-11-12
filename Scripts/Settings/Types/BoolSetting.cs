@@ -7,8 +7,8 @@ namespace Framework.Settings
     {
         private static readonly string[] DISPLAY_VALUES = new string[]
         {
-            "On",
             "Off",
+            "On",
         };
 
         public override string[] DisplayValues => DISPLAY_VALUES;
@@ -17,12 +17,12 @@ namespace Framework.Settings
         {
             if (serialized == DISPLAY_VALUES[0])
             {
-                value = true;
+                value = false;
                 return true;
             }
             if (serialized == DISPLAY_VALUES[1])
             {
-                value = false;
+                value = true;
                 return true;
             }
 
@@ -32,7 +32,7 @@ namespace Framework.Settings
 
         public override string Serialize(bool value)
         {
-            return value ? DISPLAY_VALUES[0] : DISPLAY_VALUES[1];
+            return DISPLAY_VALUES[value ? 1 : 0];
         }
     }
 }
