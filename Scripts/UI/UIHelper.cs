@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +14,7 @@ namespace Framework.UI
             rt.SetParent(parent, false);
             rt.localPosition = Vector3.zero;
             rt.localRotation = Quaternion.identity;
-            rt.localScale = Vector2.one;
+            rt.localScale = Vector3.one;
             return rt;
         }
 
@@ -28,7 +30,7 @@ namespace Framework.UI
             
             rt.localPosition = Vector3.zero;
             rt.localRotation = Quaternion.identity;
-            rt.localScale = Vector2.one;
+            rt.localScale = Vector3.one;
             return component;
         }
 
@@ -40,57 +42,158 @@ namespace Framework.UI
             return rt;
         }
 
-        public static Selectable[] SetNavigationVertical(Transform parent, Selectable above, Selectable below, Selectable left, Selectable right, bool allowDisabled = false)
+        /// <summary>
+        /// Configues the navigation between a group of horizontally arranged selectables.
+        /// </summary>
+        /// <param name="parent">The parent of the horizontal selectable group.</param>
+        /// <param name="up">The selectable to nativate to above the group.</param>
+        /// <param name="down">The selectable to nativate to below the group.</param>
+        /// <param name="left">The selectable to nativate to the left of the group.</param>
+        /// <param name="right">The selectable to nativate to the right of the group.</param>
+        /// <param name="verticalSelect">The selectable in the group to select when navigating
+        /// from the above or below selectables. By default this is the first selectable.</param>
+        /// <param name="allowDisabled">Configure navigation to disabled selectables in the
+        /// group.</param>
+        /// <returns>The horizontal selectable group.</returns>
+        public static List<Selectable> SetNavigationHorizontal(
+            Transform parent,
+            Selectable up,
+            Selectable down,
+            Selectable left,
+            Selectable right,
+            Selectable verticalSelect = null,
+            bool allowDisabled = false
+        )
         {
-            Selectable[] selectables = parent
-                .Cast<Transform>()
-                .Select(t => t.GetComponentInChildren<Selectable>())
-                .Where(s => s != null && (allowDisabled || s.isActiveAndEnabled))
-                .ToArray();
-            
-            Navigation explicitNav = new Navigation();
-            explicitNav.mode = Navigation.Mode.Explicit;
-            explicitNav.selectOnLeft = left;
-            explicitNav.selectOnRight = right;
+            var selectables = GetSelectables(parent, allowDisabled);
 
-            for (int i = 0; i < selectables.Length; i++)
+            Navigation tempNav = new Navigation
+            {
+                mode = Navigation.Mode.Explicit,
+                selectOnUp = up,
+                selectOnDown = down
+            };
+
+            for (int i = 0; i < selectables.Count; i++)
             {
                 Selectable current = selectables[i];
 
-                explicitNav.selectOnUp = (i == 0) ? above : selectables[i - 1];
-                explicitNav.selectOnDown = (i == selectables.Length - 1) ? below : selectables[i + 1];
+                tempNav.selectOnLeft = (i == 0) ? left : selectables[i - 1];
+                tempNav.selectOnRight = (i == selectables.Count - 1) ? right : selectables[i + 1];
 
-                current.navigation = explicitNav;
+                current.navigation = tempNav;
             }
 
-            Navigation tempNav;
-
-            if (above != null)
+            if (up != null)
             {
-                tempNav = above.navigation;
-                tempNav.selectOnDown = selectables.First();
-                above.navigation = tempNav;
+                tempNav = up.navigation;
+                tempNav.selectOnDown = verticalSelect ?? selectables.First();
+                up.navigation = tempNav;
             }
-
-            if (below != null)
+            if (down != null)
             {
-                tempNav = below.navigation;
-                tempNav.selectOnUp = selectables.Last();
-                below.navigation = tempNav;
+                tempNav = down.navigation;
+                tempNav.selectOnUp = verticalSelect ?? selectables.First();
+                down.navigation = tempNav;
             }
-
             if (left != null)
             {
                 tempNav = left.navigation;
                 tempNav.selectOnRight = selectables.First();
                 left.navigation = tempNav;
             }
-
             if (right != null)
             {
                 tempNav = right.navigation;
-                tempNav.selectOnLeft = selectables.First();
+                tempNav.selectOnLeft = selectables.Last();
                 right.navigation = tempNav;
+            }
+
+            return selectables;
+        }
+
+        /// <summary>
+        /// Configues the navigation between a group of vertically arranged selectables.
+        /// </summary>
+        /// <param name="parent">The parent of the vertical selectable group.</param>
+        /// <param name="up">The selectable to nativate to above the group.</param>
+        /// <param name="down">The selectable to nativate to below the group.</param>
+        /// <param name="left">The selectable to nativate to the left of the group.</param>
+        /// <param name="right">The selectable to nativate to the right of the group.</param>
+        /// <param name="horizontalSelect">The selectable in the group to select when navigating
+        /// from the left or right selectables. By default this is the first selectable.</param>
+        /// <param name="allowDisabled">Configure navigation to disabled selectables in the
+        /// group.</param>
+        /// <returns>The vertical selectable group.</returns>
+        public static List<Selectable> SetNavigationVertical(
+            Transform parent,
+            Selectable up,
+            Selectable down,
+            Selectable left,
+            Selectable right,
+            Selectable horizontalSelect = null,
+            bool allowDisabled = false
+        )
+        {
+            var selectables = GetSelectables(parent, allowDisabled);
+
+            Navigation tempNav = new Navigation
+            {
+                mode = Navigation.Mode.Explicit,
+                selectOnLeft = left,
+                selectOnRight = right
+            };
+
+            for (int i = 0; i < selectables.Count; i++)
+            {
+                Selectable current = selectables[i];
+
+                tempNav.selectOnUp = (i == 0) ? up : selectables[i - 1];
+                tempNav.selectOnDown = (i == selectables.Count - 1) ? down : selectables[i + 1];
+
+                current.navigation = tempNav;
+            }
+
+            if (up != null)
+            {
+                tempNav = up.navigation;
+                tempNav.selectOnDown = selectables.First();
+                up.navigation = tempNav;
+            }
+            if (down != null)
+            {
+                tempNav = down.navigation;
+                tempNav.selectOnUp = selectables.Last();
+                down.navigation = tempNav;
+            }
+            if (left != null)
+            {
+                tempNav = left.navigation;
+                tempNav.selectOnRight = horizontalSelect ?? selectables.First();
+                left.navigation = tempNav;
+            }
+            if (right != null)
+            {
+                tempNav = right.navigation;
+                tempNav.selectOnLeft = horizontalSelect ?? selectables.First();
+                right.navigation = tempNav;
+            }
+
+            return selectables;
+        }
+        
+        private static List<Selectable> GetSelectables(Transform parent, bool allowDisabled)
+        {
+            List<Selectable> selectables = new List<Selectable>();
+
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                var selectable = parent.GetChild(i).GetComponent<Selectable>();
+
+                if (selectable != null && (allowDisabled || (selectable.isActiveAndEnabled && selectable.interactable)))
+                {
+                    selectables.Add(selectable);
+                }
             }
 
             return selectables;
