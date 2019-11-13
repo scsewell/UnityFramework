@@ -2,6 +2,7 @@
 using System.Linq;
 
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Framework.UI
@@ -45,68 +46,118 @@ namespace Framework.UI
         /// <summary>
         /// Configues the navigation between a group of horizontally arranged selectables.
         /// </summary>
-        /// <param name="parent">The parent of the horizontal selectable group.</param>
-        /// <param name="up">The selectable to nativate to above the group.</param>
-        /// <param name="down">The selectable to nativate to below the group.</param>
-        /// <param name="left">The selectable to nativate to the left of the group.</param>
-        /// <param name="right">The selectable to nativate to the right of the group.</param>
-        /// <param name="verticalSelect">The selectable in the group to select when navigating
-        /// from the above or below selectables. By default this is the first selectable.</param>
-        /// <param name="allowDisabled">Configure navigation to disabled selectables in the
-        /// group.</param>
+        /// <param name="config">The configutation options.</param>
         /// <returns>The horizontal selectable group.</returns>
-        public static List<Selectable> SetNavigationHorizontal(
-            Transform parent,
-            Selectable up,
-            Selectable down,
-            Selectable left,
-            Selectable right,
-            Selectable verticalSelect = null,
-            bool allowDisabled = false
-        )
+        public static List<Selectable> SetNavigationHorizontal(NavConfig config)
         {
-            var selectables = GetSelectables(parent, allowDisabled);
+            // get the selectable group
+            List<Selectable> selectables = GetSelectables(config);
 
+            if (selectables.Count == 0)
+            {
+                return selectables;
+            }
+
+            Selectable first = selectables[0];
+            Selectable last = selectables[selectables.Count - 1];
+
+            // configure navigation in the group
             Navigation tempNav = new Navigation
             {
-                mode = Navigation.Mode.Explicit,
-                selectOnUp = up,
-                selectOnDown = down
+                selectOnUp = config.up,
+                selectOnDown = config.down,
             };
 
             for (int i = 0; i < selectables.Count; i++)
             {
                 Selectable current = selectables[i];
 
-                tempNav.selectOnLeft = (i == 0) ? left : selectables[i - 1];
-                tempNav.selectOnRight = (i == selectables.Count - 1) ? right : selectables[i + 1];
+                if (i == 0)
+                {
+                    if (config.left != null)
+                    {
+                        tempNav.selectOnLeft = config.left;
+                    }
+                    else if (config.wrap)
+                    {
+                        tempNav.selectOnLeft = FindLastSelectableInChain(last, MoveDirection.Right);
+                    }
+                    else
+                    {
+                        tempNav.selectOnLeft = null;
+                    }
+                }
+                else
+                {
+                    tempNav.selectOnLeft = selectables[i - 1];
+                }
+
+                if (i == selectables.Count - 1)
+                {
+                    if (config.right != null)
+                    {
+                        tempNav.selectOnRight = config.right;
+                    }
+                    else if (config.wrap)
+                    {
+                        tempNav.selectOnRight = FindLastSelectableInChain(first, MoveDirection.Left);
+                    }
+                    else
+                    {
+                        tempNav.selectOnRight = null;
+                    }
+                }
+                else
+                {
+                    tempNav.selectOnRight = selectables[i + 1];
+                }
 
                 current.navigation = tempNav;
             }
 
-            if (up != null)
+            // configure navigation to the group
+            if (config.up != null)
             {
-                tempNav = up.navigation;
-                tempNav.selectOnDown = verticalSelect ?? selectables.First();
-                up.navigation = tempNav;
+                tempNav = config.up.navigation;
+                tempNav.selectOnDown = config.verticalSelect != null ? config.verticalSelect : first;
+                config.up.navigation = tempNav;
             }
-            if (down != null)
+
+            if (config.down != null)
             {
-                tempNav = down.navigation;
-                tempNav.selectOnUp = verticalSelect ?? selectables.First();
-                down.navigation = tempNav;
+                tempNav = config.down.navigation;
+                tempNav.selectOnUp = config.verticalSelect != null ? config.verticalSelect : first;
+                config.down.navigation = tempNav;
             }
-            if (left != null)
+
+            if (config.left != null)
             {
-                tempNav = left.navigation;
-                tempNav.selectOnRight = selectables.First();
-                left.navigation = tempNav;
+                tempNav = config.left.navigation;
+                tempNav.selectOnRight = first;
+                config.left.navigation = tempNav;
             }
-            if (right != null)
+            else if (config.wrap)
             {
-                tempNav = right.navigation;
-                tempNav.selectOnLeft = selectables.Last();
-                right.navigation = tempNav;
+                Selectable wrap = FindLastSelectableInChain(first, MoveDirection.Right);
+
+                tempNav = wrap.navigation;
+                tempNav.selectOnRight = first;
+                wrap.navigation = tempNav;
+            }
+
+            if (config.right != null)
+            {
+                tempNav = config.right.navigation;
+                tempNav.selectOnLeft = first;
+                config.right.navigation = tempNav;
+            }
+            else if (config.wrap)
+            {
+                Selectable wrap = FindLastSelectableInChain(first, MoveDirection.Left);
+
+                tempNav = wrap.navigation;
+                tempNav.selectOnLeft = first;
+                wrap.navigation = tempNav;
             }
 
             return selectables;
@@ -115,82 +166,132 @@ namespace Framework.UI
         /// <summary>
         /// Configues the navigation between a group of vertically arranged selectables.
         /// </summary>
-        /// <param name="parent">The parent of the vertical selectable group.</param>
-        /// <param name="up">The selectable to nativate to above the group.</param>
-        /// <param name="down">The selectable to nativate to below the group.</param>
-        /// <param name="left">The selectable to nativate to the left of the group.</param>
-        /// <param name="right">The selectable to nativate to the right of the group.</param>
-        /// <param name="horizontalSelect">The selectable in the group to select when navigating
-        /// from the left or right selectables. By default this is the first selectable.</param>
-        /// <param name="allowDisabled">Configure navigation to disabled selectables in the
-        /// group.</param>
+        /// <param name="config">The configutation options.</param>
         /// <returns>The vertical selectable group.</returns>
-        public static List<Selectable> SetNavigationVertical(
-            Transform parent,
-            Selectable up,
-            Selectable down,
-            Selectable left,
-            Selectable right,
-            Selectable horizontalSelect = null,
-            bool allowDisabled = false
-        )
+        public static List<Selectable> SetNavigationVertical(NavConfig config)
         {
-            var selectables = GetSelectables(parent, allowDisabled);
+            // get the selectable group
+            List<Selectable> selectables = GetSelectables(config);
 
+            if (selectables.Count == 0)
+            {
+                return selectables;
+            }
+
+            Selectable first = selectables[0];
+            Selectable last = selectables[selectables.Count - 1];
+
+            // configure navigation in the group
             Navigation tempNav = new Navigation
             {
-                mode = Navigation.Mode.Explicit,
-                selectOnLeft = left,
-                selectOnRight = right
+                selectOnLeft = config.left,
+                selectOnRight = config.right,
             };
 
             for (int i = 0; i < selectables.Count; i++)
             {
                 Selectable current = selectables[i];
 
-                tempNav.selectOnUp = (i == 0) ? up : selectables[i - 1];
-                tempNav.selectOnDown = (i == selectables.Count - 1) ? down : selectables[i + 1];
+                if (i == 0)
+                {
+                    if (config.up != null)
+                    {
+                        tempNav.selectOnUp = config.up;
+                    }
+                    else if (config.wrap)
+                    {
+                        tempNav.selectOnUp = FindLastSelectableInChain(last, MoveDirection.Down);
+                    }
+                    else
+                    {
+                        tempNav.selectOnUp = null;
+                    }
+                }
+                else
+                {
+                    tempNav.selectOnUp = selectables[i - 1];
+                }
+
+                if (i == selectables.Count - 1)
+                {
+                    if (config.up != null)
+                    {
+                        tempNav.selectOnDown = config.down;
+                    }
+                    else if (config.wrap)
+                    {
+                        tempNav.selectOnDown = FindLastSelectableInChain(first, MoveDirection.Up);
+                    }
+                    else
+                    {
+                        tempNav.selectOnDown = null;
+                    }
+                }
+                else
+                {
+                    tempNav.selectOnDown = selectables[i + 1];
+                }
 
                 current.navigation = tempNav;
             }
 
-            if (up != null)
+            // configure navigation to the group
+            if (config.up != null)
             {
-                tempNav = up.navigation;
-                tempNav.selectOnDown = selectables.First();
-                up.navigation = tempNav;
+                tempNav = config.up.navigation;
+                tempNav.selectOnDown = first;
+                config.up.navigation = tempNav;
             }
-            if (down != null)
+            else if (config.wrap)
             {
-                tempNav = down.navigation;
-                tempNav.selectOnUp = selectables.Last();
-                down.navigation = tempNav;
+                Selectable wrap = FindLastSelectableInChain(last, MoveDirection.Down);
+
+                tempNav = wrap.navigation;
+                tempNav.selectOnDown = first;
+                wrap.navigation = tempNav;
             }
-            if (left != null)
+
+            if (config.down != null)
             {
-                tempNav = left.navigation;
-                tempNav.selectOnRight = horizontalSelect ?? selectables.First();
-                left.navigation = tempNav;
+                tempNav = config.down.navigation;
+                tempNav.selectOnUp = last;
+                config.down.navigation = tempNav;
             }
-            if (right != null)
+            else if (config.wrap)
             {
-                tempNav = right.navigation;
-                tempNav.selectOnLeft = horizontalSelect ?? selectables.First();
-                right.navigation = tempNav;
+                Selectable wrap = FindLastSelectableInChain(first, MoveDirection.Up);
+
+                tempNav = wrap.navigation;
+                tempNav.selectOnUp = last;
+                wrap.navigation = tempNav;
+            }
+
+            if (config.left != null)
+            {
+                tempNav = config.left.navigation;
+                tempNav.selectOnRight = config.horizontalSelect != null ? config.horizontalSelect : first;
+                config.left.navigation = tempNav;
+            }
+
+            if (config.right != null)
+            {
+                tempNav = config.right.navigation;
+                tempNav.selectOnLeft = config.horizontalSelect != null ? config.horizontalSelect : first;
+                config.right.navigation = tempNav;
             }
 
             return selectables;
         }
         
-        private static List<Selectable> GetSelectables(Transform parent, bool allowDisabled)
+        private static List<Selectable> GetSelectables(NavConfig config)
         {
             List<Selectable> selectables = new List<Selectable>();
 
-            for (int i = 0; i < parent.childCount; i++)
+            for (int i = 0; i < config.parent.childCount; i++)
             {
-                var selectable = parent.GetChild(i).GetComponent<Selectable>();
+                var selectable = config.parent.GetChild(i).GetComponent<Selectable>();
 
-                if (selectable != null && (allowDisabled || (selectable.isActiveAndEnabled && selectable.interactable)))
+                if (selectable != null && (config.allowDisabled || (selectable.isActiveAndEnabled && selectable.interactable)))
                 {
                     selectables.Add(selectable);
                 }
@@ -198,5 +299,105 @@ namespace Framework.UI
 
             return selectables;
         }
+
+        /// <summary>
+        /// Follows a navigation chain to the last selectable. If there are cycles in the 
+        /// navigation graph, returns the first selectable which contains a link back to a 
+        /// selectable earlier in the chain.
+        /// first selectable which
+        /// </summary>
+        /// <param name="selectable">The selectable to start from.</param>
+        /// <param name="dir">The direction to navigate along.</param>
+        /// <returns>The last selectable in the chian.</returns>
+        public static Selectable FindLastSelectableInChain(Selectable selectable, MoveDirection dir)
+        {
+            HashSet<Selectable> visited = new HashSet<Selectable>();
+
+            while (selectable != null)
+            {
+                visited.Add(selectable);
+
+                // try to find the next navigable in the given direction
+                Selectable nextSelectable = null;
+
+                switch (dir)
+                {
+                    case MoveDirection.Up:      nextSelectable = selectable.navigation.selectOnUp;      break;
+                    case MoveDirection.Down:    nextSelectable = selectable.navigation.selectOnDown;    break;
+                    case MoveDirection.Left:    nextSelectable = selectable.navigation.selectOnLeft;    break;
+                    case MoveDirection.Right:   nextSelectable = selectable.navigation.selectOnRight;   break;
+                }
+
+                // check if we found the end of the navigation chain
+                if (nextSelectable == null)
+                {
+                    break;
+                }
+
+                // make sure we haven't cycled back
+                if (visited.Contains(nextSelectable))
+                {
+                    break;
+                }
+
+                // continue on from the next selectable in the chain
+                selectable = nextSelectable;
+            }
+
+            return selectable;
+        }
+    }
+
+    /// <summary>
+    /// A configuration used for the auto navigation builder utilites.
+    /// </summary>
+    public struct NavConfig
+    {
+        /// <summary>
+        /// The parent of the selectable group.
+        /// </summary>
+        public Transform parent;
+
+        /// <summary>
+        /// Allow navigation to disabled selectables in the group.
+        /// </summary>
+        public bool allowDisabled;
+
+        /// <summary>
+        /// The selectable to nativate to above the group.
+        /// </summary>
+        public Selectable up;
+        /// <summary>
+        /// The selectable to nativate to below the group.
+        /// </summary>
+        public Selectable down;
+        /// <summary>
+        /// The selectable to nativate to the left of the group.
+        /// </summary>
+        public Selectable left;
+        /// <summary>
+        /// /The selectable to nativate to the right of the group.
+        /// </summary>
+        public Selectable right;
+
+        /// <summary>
+        /// The selectable in the selectable group to select when navigating from
+        /// selectables to the left or right when configuring vertical navigation.
+        /// By default this is the first selectable in the group.
+        /// </summary>
+        public Selectable horizontalSelect;
+        /// <summary>
+        /// The selectable in the selectable group to select when navigating from
+        /// selectables to the top or bottom when configuring horizontal navigation.
+        /// By default this is the first selectable in the group.
+        /// </summary>
+        public Selectable verticalSelect;
+
+        /// <summary>
+        /// Allow navigation between the first and last selectable. If this config
+        /// uses the up/down/left/right selectables, we follow along their navigation
+        /// chain in the relevant direction and wrap to the last avaiable element.
+        /// </summary>
+        public bool wrap;
     }
 }
