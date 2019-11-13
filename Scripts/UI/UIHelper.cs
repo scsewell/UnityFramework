@@ -80,7 +80,7 @@ namespace Framework.UI
                     }
                     else if (config.wrap)
                     {
-                        tempNav.selectOnLeft = FindLastSelectableInChain(last, MoveDirection.Right);
+                        tempNav.selectOnLeft = FindLastSelectableInChain(last, selectables, MoveDirection.Right);
                     }
                     else
                     {
@@ -100,7 +100,7 @@ namespace Framework.UI
                     }
                     else if (config.wrap)
                     {
-                        tempNav.selectOnRight = FindLastSelectableInChain(first, MoveDirection.Left);
+                        tempNav.selectOnRight = FindLastSelectableInChain(first, selectables, MoveDirection.Left);
                     }
                     else
                     {
@@ -138,7 +138,7 @@ namespace Framework.UI
             }
             else if (config.wrap)
             {
-                Selectable wrap = FindLastSelectableInChain(first, MoveDirection.Right);
+                Selectable wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Right);
 
                 tempNav = wrap.navigation;
                 tempNav.selectOnRight = first;
@@ -153,7 +153,7 @@ namespace Framework.UI
             }
             else if (config.wrap)
             {
-                Selectable wrap = FindLastSelectableInChain(first, MoveDirection.Left);
+                Selectable wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Left);
 
                 tempNav = wrap.navigation;
                 tempNav.selectOnLeft = first;
@@ -200,7 +200,7 @@ namespace Framework.UI
                     }
                     else if (config.wrap)
                     {
-                        tempNav.selectOnUp = FindLastSelectableInChain(last, MoveDirection.Down);
+                        tempNav.selectOnUp = FindLastSelectableInChain(last, selectables, MoveDirection.Down);
                     }
                     else
                     {
@@ -214,13 +214,13 @@ namespace Framework.UI
 
                 if (i == selectables.Count - 1)
                 {
-                    if (config.up != null)
+                    if (config.down != null)
                     {
                         tempNav.selectOnDown = config.down;
                     }
                     else if (config.wrap)
                     {
-                        tempNav.selectOnDown = FindLastSelectableInChain(first, MoveDirection.Up);
+                        tempNav.selectOnDown = FindLastSelectableInChain(first, selectables, MoveDirection.Up);
                     }
                     else
                     {
@@ -244,7 +244,7 @@ namespace Framework.UI
             }
             else if (config.wrap)
             {
-                Selectable wrap = FindLastSelectableInChain(last, MoveDirection.Down);
+                Selectable wrap = FindLastSelectableInChain(last, selectables, MoveDirection.Down);
 
                 tempNav = wrap.navigation;
                 tempNav.selectOnDown = first;
@@ -259,7 +259,7 @@ namespace Framework.UI
             }
             else if (config.wrap)
             {
-                Selectable wrap = FindLastSelectableInChain(first, MoveDirection.Up);
+                Selectable wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Up);
 
                 tempNav = wrap.navigation;
                 tempNav.selectOnUp = last;
@@ -300,6 +300,8 @@ namespace Framework.UI
             return selectables;
         }
 
+        private static readonly HashSet<Selectable> s_visited = new HashSet<Selectable>();
+
         /// <summary>
         /// Follows a navigation chain to the last selectable. If there are cycles in the 
         /// navigation graph, returns the first selectable which contains a link back to a 
@@ -307,15 +309,20 @@ namespace Framework.UI
         /// first selectable which
         /// </summary>
         /// <param name="selectable">The selectable to start from.</param>
+        /// <param name="exclude">The selectables which are not to be included in the search.</param>
         /// <param name="dir">The direction to navigate along.</param>
         /// <returns>The last selectable in the chian.</returns>
-        public static Selectable FindLastSelectableInChain(Selectable selectable, MoveDirection dir)
+        public static Selectable FindLastSelectableInChain(Selectable selectable, IEnumerable<Selectable> exclude, MoveDirection dir)
         {
-            HashSet<Selectable> visited = new HashSet<Selectable>();
+            s_visited.Clear();
+            foreach (Selectable excluded in exclude)
+            {
+                s_visited.Add(excluded);
+            }
 
             while (selectable != null)
             {
-                visited.Add(selectable);
+                s_visited.Add(selectable);
 
                 // try to find the next navigable in the given direction
                 Selectable nextSelectable = null;
@@ -335,7 +342,7 @@ namespace Framework.UI
                 }
 
                 // make sure we haven't cycled back
-                if (visited.Contains(nextSelectable))
+                if (s_visited.Contains(nextSelectable))
                 {
                     break;
                 }
@@ -345,6 +352,35 @@ namespace Framework.UI
             }
 
             return selectable;
+        }
+
+        /// <summary>
+        /// Checks if moving from one rect transform to another does not
+        /// align with the given move direction.
+        /// </summary>
+        /// <param name="from">The rect moved from.</param>
+        /// <param name="to">The rect moved to.</param>
+        /// <param name="dir">The move direction.</param>
+        /// <returns>True if the directions are opposite.</returns>
+        public static bool Wraps(Component from, Component to, MoveDirection dir)
+        {
+            RectTransform fRect = from.GetComponent<RectTransform>();
+            RectTransform tRect = to.GetComponent<RectTransform>();
+
+            Vector3 toRectCenterWorld = tRect.transform.TransformPoint(tRect.rect.center);
+            Vector2 toRectCenterLocal = fRect.InverseTransformPoint(toRectCenterWorld);
+
+            Vector2 delta = toRectCenterLocal - fRect.rect.center;
+
+            switch (dir)
+            {
+                case MoveDirection.Up:      return delta.y < 0f;
+                case MoveDirection.Down:    return delta.y > 0f;
+                case MoveDirection.Left:    return delta.x > 0f;
+                case MoveDirection.Right:   return delta.x < 0f;
+            }
+
+            return false;
         }
     }
 
