@@ -35,12 +35,13 @@ namespace Framework.UI
             return component;
         }
 
-        public static RectTransform AddSpacer(Transform parent, float height)
+        public static RectTransform AddSpacer(Transform parent, float size)
         {
-            RectTransform rt = Create(parent, "spacer");
-            LayoutElement le = rt.gameObject.AddComponent<LayoutElement>();
-            le.minHeight = height;
-            return rt;
+            RectTransform rect = Create(parent, "spacer");
+            LayoutElement layout = rect.gameObject.AddComponent<LayoutElement>();
+            layout.minHeight = size;
+            layout.minWidth = size;
+            return rect;
         }
 
         /// <summary>
