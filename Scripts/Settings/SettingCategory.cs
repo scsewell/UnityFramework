@@ -8,5 +8,13 @@ namespace Framework.Settings
     [CreateAssetMenu(fileName = "New Category", menuName = "Framework/Settings/Category", order = 50)]
     public class SettingCategory : ScriptableObject
     {
+        [SerializeField]
+        [Tooltip("The icon used to represent this category in the game UI.")]
+        private Sprite m_icon = null;
+
+        /// <summary>
+        /// The icon used to represent this category in the game UI.
+        /// </summary>
+        public Sprite Icon => m_icon;
     }
 }

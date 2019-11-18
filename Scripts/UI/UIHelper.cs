@@ -19,9 +19,14 @@ namespace Framework.UI
             return rt;
         }
 
-        public static T Create<T>(T prefab, Transform parent) where T : Component
+        public static T Create<T>(T prefab, Transform parent, string name = "") where T : Component
         {
             T component = Object.Instantiate(prefab, parent);
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                component.gameObject.name = name;
+            }
 
             RectTransform rt = component.GetComponent<RectTransform>();
             if (rt == null)
@@ -82,6 +87,7 @@ namespace Framework.UI
                     else if (config.wrap)
                     {
                         tempNav.selectOnLeft = FindLastSelectableInChain(last, selectables, MoveDirection.Right);
+                        Debug.Log($"{i}:{current.name} {tempNav.selectOnLeft}");
                     }
                     else
                     {
@@ -139,7 +145,7 @@ namespace Framework.UI
             }
             else if (config.wrap)
             {
-                Selectable wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Right);
+                Selectable wrap = FindLastSelectableInChain(last, selectables, MoveDirection.Right);
 
                 tempNav = wrap.navigation;
                 tempNav.selectOnRight = first;
@@ -149,7 +155,7 @@ namespace Framework.UI
             if (config.right != null)
             {
                 tempNav = config.right.navigation;
-                tempNav.selectOnLeft = first;
+                tempNav.selectOnLeft = last;
                 config.right.navigation = tempNav;
             }
             else if (config.wrap)
@@ -157,7 +163,7 @@ namespace Framework.UI
                 Selectable wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Left);
 
                 tempNav = wrap.navigation;
-                tempNav.selectOnLeft = first;
+                tempNav.selectOnLeft = last;
                 wrap.navigation = tempNav;
             }
 

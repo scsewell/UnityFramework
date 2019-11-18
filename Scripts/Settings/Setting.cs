@@ -12,7 +12,21 @@ namespace Framework.Settings
         [SerializeField]
         [Tooltip("The category this setting is grouped by.")]
         private SettingCategory m_category = null;
+
+        /// <summary>
+        /// The category this setting is grouped by.
+        /// </summary>
         public SettingCategory Category => m_category;
+
+        [SerializeField]
+        [Tooltip("A description of what the setting does.")]
+        [TextArea]
+        private string m_description = null;
+
+        /// <summary>
+        /// A description of what the setting does.
+        /// </summary>
+        public string Description => m_description;
 
         [SerializeField]
         [Tooltip("How the setting should be selected in the user interface.")]
@@ -37,6 +51,7 @@ namespace Framework.Settings
         /// The options to show when using a dropdown or spinner display mode.
         /// </summary>
         public abstract string[] DisplayValues { get; }
+
 
         /// <summary>
         /// Initializes this setting.
