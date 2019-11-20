@@ -60,6 +60,26 @@ namespace Framework
         /// <param name="value">The value to clamp.</param>
         /// <returns>The clamped value.</returns>
         public float Clamp(float value) => Mathf.Clamp(value, m_min, m_max);
+
+        /// <summary>
+        /// Interpolation from the lower bound to the upper bound by t. 
+        /// </summary>
+        /// <param name="t">The interpolation factor.</param>
+        /// <returns>The interplated value on the range.</returns>
+        public float Lerp(float t)
+        {
+            return Mathf.Lerp(m_min, m_max, t);
+        }
+
+        /// <summary>
+        /// Gets the interpolation factor which results in a value on the range. 
+        /// </summary>
+        /// <param name="value">A value.</param>
+        /// <returns>The interplation factor.</returns>
+        public float InverseLerp(float value)
+        {
+            return Mathf.InverseLerp(m_min, m_max, value);
+        }
     }
 
     /// <summary>

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -87,7 +86,6 @@ namespace Framework.UI
                     else if (config.wrap)
                     {
                         tempNav.selectOnLeft = FindLastSelectableInChain(last, selectables, MoveDirection.Right);
-                        Debug.Log($"{i}:{current.name} {tempNav.selectOnLeft}");
                     }
                     else
                     {
