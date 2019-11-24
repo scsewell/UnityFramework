@@ -7,32 +7,50 @@ namespace Framework.Interpolation
     /// Controls the updating of all interpolated values. Must execute before any interpolated
     /// values are changed each frame.
     /// </summary>
-    public class InterpolationController : Singleton<InterpolationController>
+    public static class InterpolationController
     {
-        private List<IInterpolator> m_interpolators = new List<IInterpolator>();
-        private float m_lastFixedTime;
+        private static readonly List<IInterpolator> m_interpolators = new List<IInterpolator>();
+        private static float m_lastFixedTime;
 
-        public void EarlyFixedUpdate()
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Init()
+        {
+            m_interpolators.Clear();
+            m_lastFixedTime = 0f;
+        }
+
+        /// <summary>
+        /// Called prior to modifying any interpolated values in fixed update.
+        /// </summary>
+        public static void EarlyFixedUpdate()
         {
             m_lastFixedTime = Time.time;
 
-            foreach (IInterpolator component in m_interpolators)
+            for (int i = 0; i < m_interpolators.Count; i++)
             {
-                component.FixedFrame();
+                m_interpolators[i].FixedFrame();
             }
         }
 
-        public void VisualUpdate()
+        /// <summary>
+        /// Called every frame to interpolate the values.
+        /// </summary>
+        public static void VisualUpdate()
         {
             float factor = (Time.time - m_lastFixedTime) / Time.fixedDeltaTime;
 
-            foreach (IInterpolator interpolator in m_interpolators)
+            for (int i = 0; i < m_interpolators.Count; i++)
             {
-                interpolator.UpdateFrame(factor);
+                m_interpolators[i].UpdateFrame(factor);
             }
         }
 
-        public void AddInterpolator(IInterpolator interpolator)
+        /// <summary>
+        /// Adds an interpolator.
+        /// </summary>
+        /// <param name="interpolator">The interpolator to enable.</param>
+        public static void AddInterpolator(IInterpolator interpolator)
         {
             if (!m_interpolators.Contains(interpolator))
             {
@@ -40,7 +58,11 @@ namespace Framework.Interpolation
             }
         }
 
-        public void RemoveInterpolator(IInterpolator interpolator)
+        /// <summary>
+        /// Removes an interpolator.
+        /// </summary>
+        /// <param name="interpolator">The interpolator to remove.</param>
+        public static void RemoveInterpolator(IInterpolator interpolator)
         {
             m_interpolators.Remove(interpolator);
         }

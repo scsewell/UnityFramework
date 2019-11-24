@@ -25,12 +25,12 @@ namespace Framework.Interpolation
         private void OnEnable()
         {
             ForgetPreviousValues();
-            InterpolationController.Instance.AddInterpolator(this);
+            InterpolationController.AddInterpolator(this);
         }
 
         private void OnDisable()
         {
-            InterpolationController.Instance.RemoveInterpolator(this);
+            InterpolationController.RemoveInterpolator(this);
         }
 
         public void SetThresholds(float positionThreshold, float rotationThreshold, float scaleThreshold)

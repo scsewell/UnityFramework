@@ -27,12 +27,12 @@ namespace Framework.Interpolation
             {
                 ForgetPreviousValues();
             }
-            InterpolationController.Instance.AddInterpolator(this);
+            InterpolationController.AddInterpolator(this);
         }
 
         private void OnDisable()
         {
-            InterpolationController.Instance.RemoveInterpolator(this);
+            InterpolationController.RemoveInterpolator(this);
         }
 
         private void Start()

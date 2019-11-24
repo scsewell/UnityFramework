@@ -48,7 +48,7 @@ namespace Framework.AssetBundles
         private static readonly List<BundleData> m_loadedBundles = new List<BundleData>();
         private static readonly List<BundleData> m_bundlesToRemove = new List<BundleData>();
         private static readonly Dictionary<string, BundleData> m_nameToBundle = new Dictionary<string, BundleData>();
-        private static bool m_autoUnloadBundles = true;
+        private static bool m_autoUnloadBundles;
 
         /// <summary>
         /// Will the bundle manager automatically decide when to check for unused bundles. 
@@ -73,8 +73,20 @@ namespace Framework.AssetBundles
         /// <summary>
         /// The period in seconds for which the bundle manager will wait before checking for unused bundles. 
         /// </summary>
-        public static float AutoUnloadPeriod { get; set; } = 5.0f;
+        public static float AutoUnloadPeriod { get; set; }
 
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Init()
+        {
+            m_bundlesPaths.Clear();
+            m_loadedBundles.Clear();
+            m_bundlesToRemove.Clear();
+            m_nameToBundle.Clear();
+
+            m_autoUnloadBundles = true;
+            AutoUnloadPeriod = 5.0f;
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitEarly()

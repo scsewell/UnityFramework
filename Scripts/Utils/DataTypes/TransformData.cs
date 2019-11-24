@@ -1,4 +1,5 @@
 ﻿using System;
+
 using UnityEngine;
 
 namespace Framework
@@ -40,7 +41,9 @@ namespace Framework
 
         public void ApplyTo(Transform target)
         {
-            if (m_space == Space.Self || target.parent == null)
+            Transform parent = target.parent;
+
+            if (m_space == Space.Self || parent == null)
             {
                 target.localPosition = position;
                 target.localRotation = rotation;
@@ -50,10 +53,12 @@ namespace Framework
             {
                 target.position = position;
                 target.rotation = rotation;
+
+                Vector3 parentScale = parent.lossyScale;
                 target.localScale = new Vector3(
-                    scale.x / target.parent.lossyScale.x,
-                    scale.y / target.parent.lossyScale.y,
-                    scale.z / target.parent.lossyScale.z
+                    scale.x / parentScale.x,
+                    scale.y / parentScale.y,
+                    scale.z / parentScale.z
                 );
             }
         }
@@ -85,21 +90,28 @@ namespace Framework
 
         public override int GetHashCode()
         {
-            return position.GetHashCode() ^ (rotation.GetHashCode() << 2) ^ (scale.GetHashCode() >> 2) ^ (m_space.GetHashCode() << 4);
+            return position.GetHashCode() ^
+                (rotation.GetHashCode() << 2) ^
+                (scale.GetHashCode() >> 2) ^
+                (m_space.GetHashCode() << 4);
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is TransformData)
+            if (obj is TransformData other)
             {
-                return Equals((TransformData)obj);
+                return Equals(other);
             }
             return false;
         }
 
         public bool Equals(TransformData other)
         {
-            return position == other.position && rotation == other.rotation && scale == other.scale && m_space == other.m_space;
+            return 
+                position == other.position &&
+                rotation == other.rotation && 
+                scale == other.scale &&
+                m_space == other.m_space;
         }
 
         public override string ToString()
@@ -107,14 +119,7 @@ namespace Framework
             return $"space:{m_space} pos:{position} rot:{rotation} scale:{scale}";
         }
 
-        public static bool operator ==(TransformData a, TransformData b)
-        {
-            return a.Equals(b);
-        }
-
-        public static bool operator !=(TransformData a, TransformData b)
-        {
-            return !a.Equals(b);
-        }
+        public static bool operator == (TransformData a, TransformData b) => a.Equals(b);
+        public static bool operator != (TransformData a, TransformData b) => !a.Equals(b);
     }
 }

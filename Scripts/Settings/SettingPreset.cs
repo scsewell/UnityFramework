@@ -11,8 +11,12 @@ namespace Framework.Settings
     public class SettingPreset
     {
         [SerializeField]
-        [Tooltip("The setting to create a preset for.")]
+        [Tooltip("The setting this preset value is for.")]
         private Setting m_setting = null;
+
+        /// <summary>
+        /// The setting this preset value is for.
+        /// </summary>
         public Setting Setting => m_setting;
 
         [SerializeField]

@@ -1,4 +1,5 @@
 ﻿using System;
+
 using UnityEngine;
 
 namespace Framework
@@ -8,12 +9,10 @@ namespace Framework
     /// </summary>
     public abstract class Disposable : IDisposable
     {
-        private bool _disposed = false;
-
         /// <summary>
         /// Indicates if this instance has been disposed.
         /// </summary>
-        public bool Disposed => _disposed;
+        public bool Disposed { get; private set; } = false;
 
         /// <summary>
         /// Disposes this instance.
@@ -43,10 +42,10 @@ namespace Framework
         /// <param name="disposing">If true managed resources should be cleaned up.</param>
         private void Dispose(bool disposing)
         {
-            if (!_disposed && CanDispose())
+            if (!Disposed && CanDispose())
             {
                 OnDispose(disposing);
-                _disposed = true;
+                Disposed = true;
             }
         }
 

@@ -24,7 +24,7 @@ namespace Framework.Settings
         private const string FILE_NAME = "Settings.ini";
 
 
-        private static SettingManager m_instance = null;
+        private static SettingManager m_instance;
 
         /// <summary>
         /// The settings manager instance.
@@ -45,6 +45,18 @@ namespace Framework.Settings
                 }
                 return m_instance;
             }
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Init()
+        {
+            m_instance = null;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void InitializeOnLoad()
+        {
+            Instance.Initialize();
         }
 
 
@@ -70,12 +82,6 @@ namespace Framework.Settings
         /// </summary>
         public IReadOnlyList<SettingCategory> Catergories => m_categories as IReadOnlyList<SettingCategory>;
 
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void InitializeOnLoad()
-        {
-            Instance.Initialize();
-        }
 
 #if UNITY_EDITOR
         private void OnEnable()

@@ -3,16 +3,33 @@
 namespace Framework
 {
     /// <summary>
+    /// We use a non-generic base class for the singleton to pick up the 
+    /// unity events.
+    /// </summary>
+    public abstract class ComponentSingletonBase : MonoBehaviour
+    {
+        protected static bool IsQuitting { get; private set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Init()
+        {
+            IsQuitting = false;
+        }
+
+        protected virtual void OnApplicationQuit()
+        {
+            IsQuitting = true;
+        }
+    }
+
+    /// <summary>
     /// Implements singletom behavior for Unity MonoBehaviors.
     /// </summary>
     /// <typeparam name="T">The type of the subclass.</typeparam>
-    public class ComponentSingleton<T> : MonoBehaviour where T : ComponentSingleton<T>
+    public abstract class ComponentSingleton<T> : ComponentSingletonBase where T : ComponentSingleton<T>
     {
-        private static readonly object m_lock = new object();
-        private static bool m_isQuitting = false;
-
-        private static T m_instance = null;
-
+        private static T m_instance;
+        
         /// <summary>
         /// The singleton instance of this class.
         /// </summary>
@@ -22,18 +39,14 @@ namespace Framework
             {
                 if (m_instance == null)
                 {
-                    lock (m_lock)
+                    m_instance = FindObjectOfType<T>();
+                    
+                    // Only create a new instance if not quitting so the instance
+                    // reference will not persist when fast play mode is enabled.
+                    if (m_instance == null && !IsQuitting)
                     {
-                        if (m_instance == null)
-                        {
-                            m_instance = FindObjectOfType<T>();
-                        }
-
-                        if (m_instance == null && !m_isQuitting)
-                        {
-                            m_instance = new GameObject(typeof(T).Name + " (Generated)").AddComponent<T>();
-                            DontDestroyOnLoad(m_instance.gameObject);
-                        }
+                        m_instance = new GameObject(typeof(T).Name + " (Generated)").AddComponent<T>();
+                        DontDestroyOnLoad(m_instance.gameObject);
                     }
                 }
                 return m_instance;
@@ -60,11 +73,6 @@ namespace Framework
             {
                 m_instance = null;
             }
-        }
-
-        protected virtual void OnApplicationQuit()
-        {
-            m_isQuitting = true;
         }
     }
 }

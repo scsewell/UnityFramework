@@ -145,7 +145,7 @@ namespace Framework.Settings
         }
 
         /// <summary>
-        /// Processing a setting value to make sure it is valid.
+        /// Processes a setting value to make sure it is valid.
         /// </summary>
         /// <param name="newValue">The value to validate.</param>
         /// <returns>The processed value/</returns>

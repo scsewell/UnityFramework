@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 using UnityEngine;
 
-using Framework;
-
 namespace Framework.Settings
 {
     /// <summary>
