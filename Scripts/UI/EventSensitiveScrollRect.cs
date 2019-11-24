@@ -6,47 +6,39 @@ namespace Framework.UI
 {
     public class EventSensitiveScrollRect : MonoBehaviour
     {
-        // how much to "overshoot" when scrolling, relative to the selected item's height
-        private static float SCROLL_MARGIN = 0.3f;
+        [SerializeField]
+        [Range(0f, 1f)]
+        private float m_scrollMargin = 0.3f;
 
-        private ScrollRect m_sr;
-
-        private GameObject m_selected;
+        private ScrollRect m_scrollRect = null;
+        private GameObject m_selected = null;
 
         private void Awake()
         {
-            m_sr = GetComponentInChildren<ScrollRect>(true);
+            m_scrollRect = GetComponentInChildren<ScrollRect>(true);
         }
 
-        private void Update()
+        private void LateUpdate()
         {
             GameObject lastSelected = m_selected;
             m_selected = EventSystem.current.currentSelectedGameObject;
 
-            if (m_selected == null || m_selected == lastSelected || !m_selected.transform.IsChildOf(m_sr.content))
+            if (m_selected == null || m_selected == lastSelected || !m_selected.transform.IsChildOf(m_scrollRect.content))
             {
                 return;
             }
 
-            RectTransform rt = null;
-            foreach (Transform t in m_sr.content)
-            {
-                if (m_selected.transform.IsChildOf(t))
-                {
-                    rt = t.GetComponent<RectTransform>();
-                    break;
-                }
-            }
-            float contentHeight = m_sr.content.rect.height;
-            float viewportHeight = m_sr.viewport.rect.height;
+            RectTransform rt = m_selected.GetComponent<RectTransform>();
 
-            // what bounds must be visible?
-            float centerLine = rt.localPosition.y; // selected item's center
-            float upperBound = centerLine + (rt.rect.height / 2f); // selected item's upper bound
-            float lowerBound = centerLine - (rt.rect.height / 2f); // selected item's lower bound
+            float contentHeight = m_scrollRect.content.rect.height;
+            float viewportHeight = m_scrollRect.viewport.rect.height;
+
+            float centerLine = rt.localPosition.y;
+            float upperBound = centerLine + (rt.rect.height / 2f);
+            float lowerBound = centerLine - (rt.rect.height / 2f);
 
             // what are the bounds of the currently visible area?
-            float lowerVisible = (contentHeight - viewportHeight) * m_sr.normalizedPosition.y - contentHeight;
+            float lowerVisible = (contentHeight - viewportHeight) * m_scrollRect.normalizedPosition.y - contentHeight;
             float upperVisible = lowerVisible + viewportHeight;
 
             // is our item visible right now?
@@ -54,12 +46,12 @@ namespace Framework.UI
             if (upperBound > upperVisible)
             {
                 // need to scroll up to upperBound
-                desiredLowerBound = upperBound - viewportHeight + rt.rect.height * SCROLL_MARGIN;
+                desiredLowerBound = upperBound - viewportHeight + (rt.rect.height * m_scrollMargin);
             }
             else if (lowerBound < lowerVisible)
             {
                 // need to scroll down to lowerBound
-                desiredLowerBound = lowerBound - rt.rect.height * SCROLL_MARGIN;
+                desiredLowerBound = lowerBound - (rt.rect.height * m_scrollMargin);
             }
             else
             {
@@ -68,8 +60,9 @@ namespace Framework.UI
             }
 
             // normalize and set the desired viewport
-            float normalizedDesired = (desiredLowerBound + contentHeight) / (contentHeight - viewportHeight);
-            m_sr.normalizedPosition = new Vector2(0, Mathf.Clamp01(normalizedDesired));
+            float normalizedDesired = Mathf.Clamp01((desiredLowerBound + contentHeight) / (contentHeight - viewportHeight));
+
+            m_scrollRect.normalizedPosition = new Vector2(0f, normalizedDesired);
         }
     }
 }

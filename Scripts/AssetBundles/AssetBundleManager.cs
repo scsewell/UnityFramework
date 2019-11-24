@@ -258,7 +258,12 @@ namespace Framework.AssetBundles
             BundleData bundle = LoadBundle(bundleName);
 
             // get the asset from the bundle
-            return await bundle.LoadAssetAsync<T>(assetName);
+            if (bundle != null)
+            {
+                return await bundle.LoadAssetAsync<T>(assetName);
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -278,7 +283,12 @@ namespace Framework.AssetBundles
             BundleData bundle = LoadBundle(bundleName);
 
             // get the scene in the bundle
-            return await bundle.GetSceneAsync();
+            if (bundle != null)
+            {
+                return await bundle.GetSceneAsync();
+            }
+
+            return null;
         }
 
         /// <summary>
