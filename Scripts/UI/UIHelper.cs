@@ -417,7 +417,7 @@ namespace Framework.UI
         /// </summary>
         public Selectable left;
         /// <summary>
-        /// /The selectable to nativate to the right of the group.
+        /// The selectable to nativate to the right of the group.
         /// </summary>
         public Selectable right;
 
