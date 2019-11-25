@@ -47,12 +47,6 @@ namespace Framework.Settings
             }
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void Init()
-        {
-            m_instance = null;
-        }
-
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeOnLoad()
         {
@@ -73,7 +67,6 @@ namespace Framework.Settings
         [Reorderable(singleLine = true)]
         private SettingList m_settings = new SettingList();
 
-        private bool m_initialized = false;
         private List<SettingCategory> m_categories = null;
         private Dictionary<SettingCategory, List<Setting>> m_categoryToSettings = null;
 
@@ -83,23 +76,11 @@ namespace Framework.Settings
         public IReadOnlyList<SettingCategory> Catergories => m_categories as IReadOnlyList<SettingCategory>;
 
 
-#if UNITY_EDITOR
-        private void OnEnable()
-        {
-            m_initialized = false;
-        }
-#endif
-
         /// <summary>
         /// Prepares the initial settings.
         /// </summary>
         private void Initialize()
         {
-            if (m_initialized)
-            {
-                return;
-            }
-
             // get the grouping of setting by category
             m_categories = new List<SettingCategory>();
             m_categoryToSettings = new Dictionary<SettingCategory, List<Setting>>();
@@ -125,8 +106,6 @@ namespace Framework.Settings
             {
                 setting.Initialize();
             }
-
-            m_initialized = true;
 
             // try to load the saved settings
             Load();
