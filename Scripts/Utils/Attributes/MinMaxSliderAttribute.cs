@@ -44,6 +44,11 @@ namespace Framework
         public Vector2 AsVector => new Vector2(m_min, m_max);
 
         /// <summary>
+        /// Gets a uniformly random value on the range.
+        /// </summary>
+        public float Random => UnityEngine.Random.Range(m_min, m_max);
+
+        /// <summary>
         /// Creates a new range.
         /// </summary>
         /// <param name="min">The lower bound on this range.</param>
