@@ -130,8 +130,8 @@ namespace Framework
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             // get the required properties and check that the property is a valid type
-            SerializedProperty min = property.FindPropertyRelative("_min");
-            SerializedProperty max = property.FindPropertyRelative("_max");
+            SerializedProperty min = property.FindPropertyRelative("m_min");
+            SerializedProperty max = property.FindPropertyRelative("m_max");
 
             if (min == null || max == null)
             {
