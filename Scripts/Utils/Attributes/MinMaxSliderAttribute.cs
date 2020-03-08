@@ -16,7 +16,7 @@ namespace Framework
     {
         [SerializeField]
         private float m_min;
-    
+
         /// <summary>
         /// The lower bound on this range.
         /// </summary>
@@ -96,7 +96,7 @@ namespace Framework
         public readonly float min;
         public readonly float max;
         public readonly float increment;
-        
+
         /// <summary>
         /// Configures how a field supporting a min-max slider behaves in the inspector.
         /// </summary>
@@ -124,8 +124,8 @@ namespace Framework
     [CustomPropertyDrawer(typeof(MinMaxSliderAttribute))]
     class MinMaxSliderDrawer : PropertyDrawer
     {
-        private const float cFloatFieldWidth = 30f;
-        private const float cSpacing = 2f;
+        private const float cFloatFieldWidth = 50f;
+        private const float cSpacing = 5f;
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
