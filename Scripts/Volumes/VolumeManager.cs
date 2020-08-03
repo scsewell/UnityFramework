@@ -85,25 +85,23 @@ namespace Framework.Volumes
             m_sortNeeded[layer] = true;
         }
 
+        /// <summary>
+        /// A struct that holds an evalauted volume influence.
+        /// </summary>
         public struct WeightedVolume
         {
             public TVolume volume;
             public float weight;
-
-            public WeightedVolume(TVolume volume, float weight)
-            {
-                this.volume = volume;
-                this.weight = weight;
-            }
         }
 
         /// <summary>
         /// Finds the volumes on a layer that have a non-zero influence given a scene point.
         /// </summary>
-        /// <param name="layer">The volume layer to evaluate.</param>
-        /// <param name="point">The scene point to test. When null, only global volumes are considred.</param>
+        /// <param name="target">The transform whose position is used to compute volume distance.
+        /// When null, only global volumes are considred.</param>
+        /// <param name="layer">The volume layer controlling which volumes are evaluated.</param>
         /// <returns>A list of relevant volumes sorted by decending weight.</returns>
-        public IReadOnlyList<WeightedVolume> Evaluate(VolumeLayer layer, Transform point)
+        public IReadOnlyList<WeightedVolume> Evaluate(Transform target, VolumeLayer layer)
         {
             m_weightedVolumes.Clear();
 
@@ -133,17 +131,21 @@ namespace Framework.Volumes
 
                 if (volume.IsGlobal)
                 {
-                    AddWeightedVolume(new WeightedVolume(volume, volume.Weight));
+                    AddWeightedVolume(new WeightedVolume
+                    {
+                        volume = volume,
+                        weight = volume.Weight,
+                    });
                     continue;
                 }
 
-                if (point == null || volume.Colliders.Count == 0)
+                if (target == null || volume.Colliders.Count == 0)
                 {
                     continue;
                 }
 
                 // find the squared distance from the volume to the point
-                var pos = point.position;
+                var pos = target.position;
                 var closestDistanceSqr = float.PositiveInfinity;
 
                 foreach (var collider in volume.Colliders)
@@ -174,7 +176,11 @@ namespace Framework.Volumes
                     weight *= 1f - (Mathf.Sqrt(closestDistanceSqr) / Mathf.Sqrt(blendDistSqr));
                 }
 
-                AddWeightedVolume(new WeightedVolume(volume, weight));
+                AddWeightedVolume(new WeightedVolume
+                {
+                    volume = volume,
+                    weight = weight,
+                });
             }
 
             // sort the volumes by decending influence

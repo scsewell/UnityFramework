@@ -2,30 +2,21 @@
 
 namespace Framework.Volumes
 {
+    /// <summary>
+    /// An asset that stores the transform whose position is used as input for a <see cref="VolumeBlender"/>.
+    /// </summary>
     [CreateAssetMenu(fileName = "New Volume Target", menuName = "Framework/Volumes/Target", order = 2)]
     public class VolumeTarget : ScriptableObject
     {
-        private Transform m_target = null;
-
-        public Transform Target
-        {
-            get
-            {
-                return m_target;
-            }
-            set
-            {
-                if (m_target != null)
-                {
-                    Debug.LogWarning($"Volume target \"{name}\" aleady has a target assigned.");
-                }
-                m_target = value;
-            }
-        }
+        /// <summary>
+        /// The transform whose position is used by <see cref="VolumeBlender"/ instances this target
+        /// is assigned to.
+        /// </summary>
+        public Transform Target { get; set; }
 
         private void OnEnable()
         {
-            m_target = null;
+            Target = null;
         }
     }
 }

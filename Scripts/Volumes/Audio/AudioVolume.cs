@@ -4,21 +4,29 @@ namespace Framework.Volumes
 {
     public class AudioVolume : Volume<AudioVolume, AudioVolumeManager>
     {
-        [SerializeField]
-        [Tooltip("The profile for this volume.")]
-        public AudioVolumeProfile m_sharedProfile;
+        [Header("Profile")]
 
+        [SerializeField]
+        [Tooltip("The audio to play in this volume.")]
+        private AudioVolumeProfile m_audio;
+
+        [SerializeField]
+        [Tooltip("The volume of the audio clip.")]
         [Range(0f, 1f)]
-        public float volume = 1f;
-        
-#if UNITY_EDITOR
+        private float m_volume = 1f;
+
+        /// <summary>
+        /// The audio to play in this volume.
+        /// </summary>
+        public AudioVolumeProfile Audio => m_audio;
+
+        /// <summary>
+        /// The volume of the audio clip.
+        /// </summary>
+        public float Volume => m_volume;
+
+        /// <inheritdoc/>
         protected override Color GizmoColor => Color.HSVToRGB(0.5f, 0.75f, 1.0f);
-        
-        private void OnDrawGizmos()
-        {
-            DrawGizmos();
-        }
-#endif
     }
 
     public class AudioVolumeManager : VolumeManager<AudioVolume, AudioVolumeManager>

@@ -175,7 +175,7 @@ namespace Framework.Volumes
             }
         }
 
-        protected virtual void DrawGizmos()
+        private void OnDrawGizmos()
         {
             if (m_isGlobal)
             {
@@ -204,7 +204,7 @@ namespace Framework.Volumes
                 if (collider is BoxCollider box)
                 {
                     Gizmos.DrawCube(box.center, box.size);
-                    Gizmos.DrawWireCube(box.center, box.size + (invScale * m_blendDistance * 2f));
+                    Gizmos.DrawWireCube(box.center, box.size + (2f * invScale * m_blendDistance));
                 }
                 else if (collider is SphereCollider sphere)
                 {
@@ -221,7 +221,7 @@ namespace Framework.Volumes
 
                     // Mesh pivot should be centered or this won't work
                     Gizmos.DrawMesh(mesh.sharedMesh);
-                    Gizmos.DrawWireMesh(mesh.sharedMesh, Vector3.zero, Quaternion.identity, Vector3.one + (invScale * blendDistance * 2f));
+                    Gizmos.DrawWireMesh(mesh.sharedMesh, Vector3.zero, Quaternion.identity, Vector3.one + (2f * invScale * m_blendDistance));
                 }
             }
         }

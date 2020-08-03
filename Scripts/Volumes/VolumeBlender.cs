@@ -2,6 +2,9 @@
 
 namespace Framework.Volumes
 {
+    /// <summary>
+    /// A component that evaluates volumes and applies the blended value.
+    /// </summary>
     public abstract class VolumeBlender : MonoBehaviour
     {
         [SerializeField]
@@ -11,7 +14,7 @@ namespace Framework.Volumes
         [SerializeField]
         [Tooltip("The target from which to get the position used for the blending. If null this transform is used.")]
         private VolumeTarget m_target = null;
-        
+
         protected virtual void Awake()
         {
             if (m_layer == null)
@@ -22,10 +25,20 @@ namespace Framework.Volumes
 
         private void Update()
         {
-            Transform target = m_target != null ? m_target.Target : transform;
+            if (m_layer == null)
+            {
+                return;
+            }
+
+            var target = m_target != null ? m_target.Target : transform;
             UpdateBlending(target, m_layer);
         }
 
+        /// <summary>
+        /// Evaluates and applies the volume blend.
+        /// </summary>
+        /// <param name="target">The transform position to use.</param>
+        /// <param name="layer">The volume layer controlling which volumes are evaluated.</param>
         protected abstract void UpdateBlending(Transform target, VolumeLayer layer);
     }
 }

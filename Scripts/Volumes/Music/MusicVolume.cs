@@ -9,21 +9,26 @@ namespace Framework.Volumes
         [Header("Profile")]
 
         [SerializeField]
-        [Tooltip("The profile for this volume.")]
-        public Music m_sharedProfile;
-        
+        [Tooltip("The music to play in this volume.")]
+        private Music m_music;
+
+        [SerializeField]
         [Range(0f, 1f)]
-        [Tooltip("The profile for this volume.")]
-        public float volume = 1f;
+        [Tooltip("The volume of the music track.")]
+        private float m_volume = 1f;
 
-#if UNITY_EDITOR
+        /// <summary>
+        /// The music to play in this volume.
+        /// </summary>
+        public Music Music => m_music;
+
+        /// <summary>
+        /// The volume of the music track.
+        /// </summary>
+        public float Volume => m_volume;
+
+        /// <inheritdoc/>
         protected override Color GizmoColor => Color.HSVToRGB(0.25f, 0.75f, 1.0f);
-
-        private void OnDrawGizmos()
-        {
-            DrawGizmos();
-        }
-#endif
     }
 
     public class MusicVolumeManager : VolumeManager<MusicVolume, MusicVolumeManager>

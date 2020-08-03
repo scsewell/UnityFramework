@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 using UnityEngine;
 
 namespace Framework.Volumes
@@ -8,41 +9,41 @@ namespace Framework.Volumes
         [SerializeField]
         [Tooltip("Restart sounds when they become audible.")]
         private bool m_restartWhenActivated = true;
-        
+
+        private readonly List<AudioSource> m_sources = new List<AudioSource>();
         private readonly Dictionary<AudioVolumeProfile, AudioSource> m_profileToSources = new Dictionary<AudioVolumeProfile, AudioSource>();
         private readonly HashSet<AudioSource> m_active = new HashSet<AudioSource>();
-        private readonly List<AudioSource> m_sources = new List<AudioSource>();
 
+        /// <inheritdoc/>
         protected override void UpdateBlending(Transform target, VolumeLayer layer)
         {
-            m_active.Clear();
-
-            var profiles = AudioVolumeManager.Instance.Evaluate(target, layer);
-
-            foreach (AudioSource source in m_sources)
+            foreach (var source in m_sources)
             {
                 source.volume = 0f;
             }
 
-            for (int i = 0; i < profiles.Count; i++)
+            m_active.Clear();
+
+            var profiles = AudioVolumeManager.Instance.Evaluate(target, layer);
+
+            for (var i = 0; i < profiles.Count; i++)
             {
                 var profileBlend = profiles[i];
                 var volume = profileBlend.volume;
-                var profile = volume.m_sharedProfile;
+                var profile = volume.Audio;
 
-                if (profile.clip != null)
+                if (profile.Clip != null)
                 {
                     // create an audiosource for this sound
-                    AudioSource source;
-                    if (!m_profileToSources.TryGetValue(profile, out source))
+                    if (!m_profileToSources.TryGetValue(profile, out var source))
                     {
                         source = gameObject.AddComponent<AudioSource>();
-                        source.clip = profile.clip;
-                        source.outputAudioMixerGroup = profile.mixer;
+                        source.clip = profile.Clip;
+                        source.outputAudioMixerGroup = profile.Mixer;
                         source.playOnAwake = false;
-                        source.loop = profile.loop;
-                        source.pitch = profile.pitch;
-                        source.panStereo = profile.pan;
+                        source.loop = profile.Loop;
+                        source.pitch = profile.Pitch;
+                        source.panStereo = profile.Pan;
                         source.spatialBlend = 0f;
 
                         source.volume = 0f;
@@ -54,17 +55,19 @@ namespace Framework.Volumes
                     m_active.Add(source);
 
                     // set the volume based on the weight
-                    float vol = volume.volume * profileBlend.weight;
+                    var vol = volume.Volume * profileBlend.weight;
+
                     if (!source.isPlaying && vol > 0)
                     {
                         source.Play();
                     }
+
                     source.volume += vol;
                 }
             }
 
             // make sure any sources not in an active volume are not playing
-            foreach (AudioSource source in m_sources)
+            foreach (var source in m_sources)
             {
                 if (source.isPlaying && !m_active.Contains(source))
                 {
@@ -76,6 +79,7 @@ namespace Framework.Volumes
                     {
                         source.Pause();
                     }
+
                     source.volume = 0f;
                 }
             }
