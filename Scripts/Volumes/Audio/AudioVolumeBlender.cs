@@ -17,7 +17,7 @@ namespace Framework.Volumes
         {
             m_active.Clear();
 
-            var profiles = AudioVolumeManager.Instance.GetProfiles(target, layer);
+            var profiles = AudioVolumeManager.Instance.Evaluate(target, layer);
 
             foreach (AudioSource source in m_sources)
             {

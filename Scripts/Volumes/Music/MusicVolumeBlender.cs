@@ -30,7 +30,7 @@ namespace Framework.Volumes
             }
             
             // get volume weights
-            var profiles = MusicVolumeManager.Instance.GetProfiles(target, layer);
+            var profiles = MusicVolumeManager.Instance.Evaluate(target, layer);
 
             for (int i = 0; i < profiles.Count; i++)
             {

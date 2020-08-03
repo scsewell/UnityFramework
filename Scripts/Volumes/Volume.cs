@@ -1,53 +1,125 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
+
 using UnityEngine;
 
 namespace Framework.Volumes
 {
+    /// <summary>
+    /// A class that defines a volume that can have properties that can be blended between.
+    /// </summary>
+    /// <typeparam name="TVolume">The concrete type inheriting from this class.</typeparam>
+    /// <typeparam name="TManager">The concrete volume manager type for this type of volume.</typeparam>
     public abstract class Volume<TVolume, TManager> : MonoBehaviour
         where TVolume : Volume<TVolume, TManager>
         where TManager : VolumeManager<TVolume, TManager>, new()
     {
         private const string VOLUME_LAYER_NAME = "Volumes";
-        
-        private static TManager m_manager = typeof(TManager).BaseType.GetField("m_instance", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null) as TManager;
-        
+
+        private static TManager m_manager = typeof(TManager).BaseType
+            .GetField("m_instance", BindingFlags.NonPublic | BindingFlags.Static)
+            .GetValue(null) as TManager;
+
         [SerializeField]
-        [Tooltip("The layer used by this volume.")]
+        [Tooltip("The layer affected by this volume.")]
         private VolumeLayer m_layer = null;
 
         [SerializeField]
-        [Tooltip("A global volume is applied to the whole scene.")]
-        public bool isGlobal = false;
+        [Tooltip("A global volume is applied to the whole scene and ignores colliders.")]
+        private bool m_isGlobal = false;
 
         [SerializeField]
-        [Tooltip("Volume priority in the stack. Higher number means higher priority. Negative values are supported.")]
+        [Tooltip("The priority of this volume in the stack. " +
+            "Volumes with greater priorities override volume with lesser priorities. " +
+            "Negative values are supported.")]
         [Range(-10000, 10000)]
         private int m_priority = 0;
 
-        [Tooltip("Outer distance to start blending from. A value of 0 means no blending and the volume overrides will be applied immediately upon entry.")]
-        public float blendDistance = 0f;
-
-        [Tooltip("Total weight of this volume in the scene. 0 means it won't do anything, 1 means full effect.")]
+        [Tooltip("The strength of this volume in the scene. " +
+            "Volumes with a weight of 0 have no effect, while a weight of 1 means full effect.")]
         [Range(0f, 1f)]
-        public float weight = 1f;
+        private float m_weight = 1f;
+
+        [Tooltip("The distance from the volume to start blending in at.")]
+        private float m_blendDistance = 0f;
 
         private readonly List<Collider> m_colliders = new List<Collider>();
-        public List<Collider> Colliders => m_colliders;
 
-        public int Priority => m_priority;
+        /// <summary>
+        /// The layer affected by this volume.
+        /// </summary>
         public VolumeLayer Layer => m_layer;
-        
-        private void Reset()
+
+        /// <summary>
+        /// A global volume is applied to the whole scene and ignores colliders.
+        /// </summary>
+        public bool IsGlobal
         {
-            int volumeLayer = LayerMask.NameToLayer(VOLUME_LAYER_NAME);
-            if (volumeLayer != -1)
+            get => m_isGlobal;
+            set => m_isGlobal = value;
+        }
+
+        /// <summary>
+        /// The priority of this volume in the stack.
+        /// </summary>
+        /// <remarks>
+        /// Volumes with greater priorities override volume with lesser priorities.
+        /// Negative prorities are supported.
+        /// </remarks>
+        public int Priority
+        {
+            get => m_priority;
+            set => m_priority = value;
+        }
+
+        /// <summary>
+        /// The strength of this volume in the scene. Volumes with a weight of 0 have no
+        /// effect, while a weight of 1 means full effect.
+        /// </summary>
+        public float Weight
+        {
+            get => m_weight;
+            set => m_weight = Mathf.Clamp01(value);
+        }
+
+        /// <summary>
+        /// The distance from the volume to start blending in at.
+        /// </summary>
+        public float BlendDistance
+        {
+            get => m_blendDistance;
+            set => m_blendDistance = Mathf.Max(value, 0);
+        }
+
+        /// <summary>
+        /// The colliders whose union defines the volume shape.
+        /// </summary>
+        public IReadOnlyList<Collider> Colliders => m_colliders;
+
+        /// <summary>
+        /// The color of the volume in the editor scene view.
+        /// </summary>
+        protected abstract Color GizmoColor { get; }
+
+#if UNITY_EDITOR
+        private VolumeLayer m_previousLayer;
+        private float m_previousPriority;
+#endif
+
+        protected virtual void Reset()
+        {
+            var layer = LayerMask.NameToLayer(VOLUME_LAYER_NAME);
+
+            if (layer != -1)
             {
-                gameObject.layer = volumeLayer;
+                foreach (var t in GetComponentsInChildren<Transform>(true))
+                {
+                    t.gameObject.layer = layer;
+                }
             }
             else
             {
-                Debug.LogWarning($"Layer \"{VOLUME_LAYER_NAME}\" is not defined. Create it and set disable physics interactions on that layer.");
+                Debug.LogWarning($"Layer \"{VOLUME_LAYER_NAME}\" is not defined. Create it and disable all physics interactions for that layer.");
             }
         }
 
@@ -66,32 +138,27 @@ namespace Framework.Volumes
 #endif
         }
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             Register();
         }
 
-        private void OnDisable()
+        protected virtual void OnDisable()
         {
             Deregister();
         }
 
         private void Register()
         {
-            m_manager.Register(this as TVolume, m_layer);
+            m_manager.Register(this as TVolume);
         }
 
         private void Deregister()
         {
-            m_manager.Deregister(this as TVolume, m_layer);
+            m_manager.Deregister(this as TVolume);
         }
 
 #if UNITY_EDITOR
-        private VolumeLayer m_previousLayer;
-        private float m_previousPriority;
-
-        protected abstract Color Color { get; }
-        
         private void Update()
         {
             if (m_layer != m_previousLayer)
@@ -108,57 +175,53 @@ namespace Framework.Volumes
             }
         }
 
-        protected void DrawGizmos()
+        protected virtual void DrawGizmos()
         {
-            if (isGlobal)
+            if (m_isGlobal)
             {
                 return;
             }
-            
-            m_colliders.Clear();
-            GetComponents(m_colliders);
 
-            Vector3 scale = transform.localScale;
-            Vector3 invScale = new Vector3(1f / scale.x, 1f / scale.y, 1f / scale.z);
+            var scale = transform.localScale;
+            var invScale = new Vector3(1f / scale.x, 1f / scale.y, 1f / scale.z);
             Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, scale);
 
-            Color color = Color;
+            var color = GizmoColor;
             color.a = 0.25f;
             Gizmos.color = color;
 
+            m_colliders.Clear();
+            GetComponents(m_colliders);
+
             // Draw a separate gizmo for each collider
-            foreach (Collider collider in m_colliders)
+            foreach (var collider in Colliders)
             {
                 if (!collider.enabled)
                 {
                     continue;
                 }
-                
-                if (collider is BoxCollider)
-                {
-                    BoxCollider c = collider as BoxCollider;
-                    Gizmos.DrawCube(c.center, c.size);
-                    Gizmos.DrawWireCube(c.center, c.size + (invScale * blendDistance * 2f));
-                }
-                else if (collider is SphereCollider)
-                {
-                    SphereCollider c = collider as SphereCollider;
-                    Gizmos.DrawSphere(c.center, c.radius);
-                    Gizmos.DrawWireSphere(c.center, c.radius + (invScale.x * blendDistance));
-                }
-                else if (collider is MeshCollider)
-                {
-                    MeshCollider c = collider as MeshCollider;
 
-                    // Only convex mesh colliders are allowed
-                    if (!c.convex)
+                if (collider is BoxCollider box)
+                {
+                    Gizmos.DrawCube(box.center, box.size);
+                    Gizmos.DrawWireCube(box.center, box.size + (invScale * m_blendDistance * 2f));
+                }
+                else if (collider is SphereCollider sphere)
+                {
+                    Gizmos.DrawSphere(sphere.center, sphere.radius);
+                    Gizmos.DrawWireSphere(sphere.center, sphere.radius + (invScale.x * m_blendDistance));
+                }
+                else if (collider is MeshCollider mesh)
+                {
+                    // Only convex mesh colliders work for volumes
+                    if (!mesh.convex)
                     {
-                        c.convex = true;
+                        continue;
                     }
 
                     // Mesh pivot should be centered or this won't work
-                    Gizmos.DrawMesh(c.sharedMesh);
-                    Gizmos.DrawWireMesh(c.sharedMesh, Vector3.zero, Quaternion.identity, Vector3.one + (invScale * blendDistance * 2f));
+                    Gizmos.DrawMesh(mesh.sharedMesh);
+                    Gizmos.DrawWireMesh(mesh.sharedMesh, Vector3.zero, Quaternion.identity, Vector3.one + (invScale * blendDistance * 2f));
                 }
             }
         }

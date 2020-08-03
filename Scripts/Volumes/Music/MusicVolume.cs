@@ -17,7 +17,7 @@ namespace Framework.Volumes
         public float volume = 1f;
 
 #if UNITY_EDITOR
-        protected override Color Color => Color.HSVToRGB(0.25f, 0.75f, 1.0f);
+        protected override Color GizmoColor => Color.HSVToRGB(0.25f, 0.75f, 1.0f);
 
         private void OnDrawGizmos()
         {
