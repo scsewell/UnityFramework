@@ -44,7 +44,7 @@ namespace Framework.UI
                 component.gameObject.name = name;
             }
 
-            if (component.TryGetComponent<RectTransform>(out var rt))
+            if (!component.TryGetComponent<RectTransform>(out var rt))
             {
                 rt = component.gameObject.AddComponent<RectTransform>();
             }
