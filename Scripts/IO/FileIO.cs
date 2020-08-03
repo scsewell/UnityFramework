@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 
 using UnityEngine;
 
@@ -25,7 +26,7 @@ namespace Framework.IO
         {
             try
             {
-                DirectoryInfo dir = new DirectoryInfo(directory);
+                var dir = new DirectoryInfo(directory);
                 return dir.Exists ? dir.GetFiles('*' + extention) : new FileInfo[0];
             }
             catch (Exception e)
@@ -36,7 +37,7 @@ namespace Framework.IO
         }
 
         /// <summary>
-        /// Writes text to a file.
+        /// Writes text to a UTF-8 encoded file.
         /// </summary>
         /// <param name="path">The full name of the file to write.</param>
         /// <param name="contents">The content to write.</param>
@@ -45,14 +46,14 @@ namespace Framework.IO
         {
             try
             {
-                FileInfo file = new FileInfo(path);
+                var file = new FileInfo(path);
 
                 if (!file.Directory.Exists)
                 {
                     Directory.CreateDirectory(file.DirectoryName);
                 }
 
-                File.WriteAllText(path, contents);
+                File.WriteAllText(path, contents, Encoding.UTF8);
                 return true;
             }
             catch (Exception e)
@@ -72,7 +73,7 @@ namespace Framework.IO
         {
             try
             {
-                FileInfo file = new FileInfo(path);
+                var file = new FileInfo(path);
 
                 if (!file.Directory.Exists)
                 {
@@ -99,7 +100,7 @@ namespace Framework.IO
         {
             try
             {
-                FileInfo file = new FileInfo(path);
+                var file = new FileInfo(path);
 
                 if (!file.Exists)
                 {
@@ -129,7 +130,7 @@ namespace Framework.IO
         {
             try
             {
-                FileInfo file = new FileInfo(path);
+                var file = new FileInfo(path);
 
                 if (!file.Exists)
                 {
@@ -159,7 +160,7 @@ namespace Framework.IO
         {
             try
             {
-                FileInfo file = new FileInfo(path);
+                var file = new FileInfo(path);
 
                 if (!file.Exists)
                 {

@@ -1,32 +1,36 @@
-﻿using UnityEngine;
-using UnityEditor;
+﻿using UnityEditor;
+
+using UnityEngine;
 
 namespace Framework.Settings
 {
     [CustomPropertyDrawer(typeof(SettingPreset))]
-    public class SettingPresetEditor : PropertyDrawer
+    internal class SettingPresetEditor : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            SerializedProperty setting = property.FindPropertyRelative("m_setting");
-            SerializedProperty value = property.FindPropertyRelative("m_value");
+            var setting = property.FindPropertyRelative("m_setting");
+            var value = property.FindPropertyRelative("m_value");
 
-            float width = Mathf.Min(250f, position.width / 2f);
+            var width = Mathf.Min(250f, position.width / 2f);
 
-            Rect settingRect = position;
+            var settingRect = position;
             settingRect.width = width;
 
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.PropertyField(settingRect, setting, new GUIContent());
-            if (EditorGUI.EndChangeCheck())
+            using (var change = new EditorGUI.ChangeCheckScope())
             {
-                value.stringValue = string.Empty;
+                EditorGUI.PropertyField(settingRect, setting, new GUIContent());
+
+                if (change.changed)
+                {
+                    value.stringValue = string.Empty;
+                }
             }
 
-            Rect valueRect = position;
+            var valueRect = position;
             valueRect.xMin = settingRect.xMax + 10f;
 
-            SettingValueDrawer.DrawSettingValueSelector(valueRect, setting.objectReferenceValue as Setting, value);
+            SettingValueDrawer.Draw(valueRect, GUIContent.none, value, setting.objectReferenceValue as Setting);
         }
     }
 }

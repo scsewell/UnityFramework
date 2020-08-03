@@ -11,9 +11,11 @@ namespace Framework.Settings
             "On",
         };
 
+        /// <inheritdoc/>
         public override string[] DisplayValues => DISPLAY_VALUES;
 
-        public override bool Deserialize(string serialized, out bool value)
+        /// <inheritdoc/>
+        internal override bool Deserialize(string serialized, out bool value)
         {
             if (serialized == DISPLAY_VALUES[0])
             {
@@ -30,9 +32,19 @@ namespace Framework.Settings
             return false;
         }
 
-        public override string Serialize(bool value)
+        /// <inheritdoc/>
+        internal override string Serialize(bool value)
         {
             return DISPLAY_VALUES[value ? 1 : 0];
         }
+
+#if UNITY_EDITOR
+        /// <inheritdoc/>
+        internal override string OnInspectorGUI(Rect pos, string serializedValue)
+        {
+            Deserialize(serializedValue, out var deserialized);
+            return Serialize(Sanitize(UnityEditor.EditorGUI.Toggle(pos, deserialized)));
+        }
+#endif
     }
 }

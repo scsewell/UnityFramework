@@ -16,7 +16,7 @@ namespace Framework.EditorTools
     /// <summary>
     /// Stores settings used for converting Text to TextMeshPro.
     /// </summary>
-    public struct TextSettings
+    internal struct TextSettings
     {
         public bool enabled;
         public TMP_FontAsset font;
@@ -35,7 +35,7 @@ namespace Framework.EditorTools
         public bool raycastTarget;
     }
 
-    public static class TMPConverter
+    internal static class TMPConverter
     {
         /// <summary>
         /// Gets the configuration of a UI text component.
@@ -90,7 +90,7 @@ namespace Framework.EditorTools
             }
         }
 
-        public static TMP_FontAsset GetFont(Font font, Material material)
+        private static TMP_FontAsset GetFont(Font font, Material material)
         {
 #if UNITY_EDITOR
             // Mapping the fonts can only be done in the editor, and to be consistent
@@ -101,17 +101,17 @@ namespace Framework.EditorTools
             }
 
             // find all fonts with a matching name
-            List<TMP_FontAsset> matchingFonts = new List<TMP_FontAsset>();
+            var matchingFonts = new List<TMP_FontAsset>();
 
-            foreach (string guid in AssetDatabase.FindAssets("t:TMP_FontAsset"))
+            foreach (var guid in AssetDatabase.FindAssets("t:TMP_FontAsset"))
             {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+
                 if (!string.IsNullOrEmpty(path))
                 {
                     foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(path))
                     {
-                        TMP_FontAsset tmpFontAsset = asset as TMP_FontAsset;
-                        if (tmpFontAsset != null && tmpFontAsset.name.ToLowerInvariant().Contains(font.name.ToLowerInvariant()))
+                        if (asset is TMP_FontAsset tmpFontAsset && tmpFontAsset.name.ToLowerInvariant().Contains(font.name.ToLowerInvariant()))
                         {
                             matchingFonts.Add(tmpFontAsset);
                         }
@@ -119,7 +119,7 @@ namespace Framework.EditorTools
                 }
             }
 
-            TMP_FontAsset tmpFont = matchingFonts.FirstOrDefault();
+            var tmpFont = matchingFonts.FirstOrDefault();
 
             // take any font with a matching name if the material settings can't be matched
             if (tmpFont == null)
@@ -141,34 +141,22 @@ namespace Framework.EditorTools
 #endif
         }
 
-        /// <summary>
-        /// Converts a Unity text setting to a Text Mesh Pro equivalent.
-        /// </summary>
-        public static float ConvertLineSpacing(float spacing)
+        private static float ConvertLineSpacing(float spacing)
         {
             return 100f * (spacing - 1f);
         }
 
-        /// <summary>
-        /// Converts a Unity text setting to a Text Mesh Pro equivalent.
-        /// </summary>
-        public static bool ConvertHorizontalWrapMode(HorizontalWrapMode overflow)
+        private static bool ConvertHorizontalWrapMode(HorizontalWrapMode overflow)
         {
             return overflow == HorizontalWrapMode.Wrap;
         }
 
-        /// <summary>
-        /// Converts a Unity text setting to a Text Mesh Pro equivalent.
-        /// </summary>
-        public static TextOverflowModes ConvertVerticalWrapMode(VerticalWrapMode verticalOverflow)
+        private static TextOverflowModes ConvertVerticalWrapMode(VerticalWrapMode verticalOverflow)
         {
             return verticalOverflow == VerticalWrapMode.Truncate ? TextOverflowModes.Truncate : TextOverflowModes.Overflow;
         }
 
-        /// <summary>
-        /// Converts a Unity text setting to a Text Mesh Pro equivalent.
-        /// </summary>
-        public static FontStyles ConvertFontStyle(FontStyle fontStyle)
+        private static FontStyles ConvertFontStyle(FontStyle fontStyle)
         {
             switch (fontStyle)
             {
@@ -180,10 +168,7 @@ namespace Framework.EditorTools
             throw new NotImplementedException($"{nameof(ConvertFontStyle)} does not implement all required cases.");
         }
 
-        /// <summary>
-        /// Converts a Unity text setting to a Text Mesh Pro equivalent.
-        /// </summary>
-        public static TextAlignmentOptions ConvertTextAnchor(TextAnchor textAnchor)
+        private static TextAlignmentOptions ConvertTextAnchor(TextAnchor textAnchor)
         {
             switch (textAnchor)
             {

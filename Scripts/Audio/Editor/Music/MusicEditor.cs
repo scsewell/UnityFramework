@@ -1,11 +1,10 @@
-﻿using UnityEngine;
-using UnityEditor;
+﻿using UnityEditor;
 
 namespace Framework.Audio
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(Music))]
-    public class MusicEditor : Editor
+    internal class MusicEditor : Editor
     {
         protected SerializedProperty m_track = null;
         protected SerializedProperty m_name = null;
@@ -37,12 +36,11 @@ namespace Framework.Audio
 
             if ((target as Music).Loop == Music.LoopMode.AtTime)
             {
-                EditorGUI.indentLevel++;
-
-                EditorGUILayout.PropertyField(m_minutes);
-                EditorGUILayout.PropertyField(m_seconds);
-
-                EditorGUI.indentLevel--;
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    EditorGUILayout.PropertyField(m_minutes);
+                    EditorGUILayout.PropertyField(m_seconds);
+                }
             }
 
             serializedObject.ApplyModifiedProperties();

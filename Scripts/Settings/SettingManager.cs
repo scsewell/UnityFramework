@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 
 using UnityEngine;
@@ -15,7 +14,7 @@ namespace Framework.Settings
     /// <summary>
     /// Manages the settings for the application.
     /// </summary>
-    [CreateAssetMenu(fileName = "SettingManager", menuName = "Framework/Settings/SettingManager", order = 80)]
+    [CreateAssetMenu(fileName = "SettingManager", menuName = "Framework/Settings/Setting Manager", order = 80)]
     public class SettingManager : ScriptableObject
     {
         /// <summary>
@@ -24,7 +23,7 @@ namespace Framework.Settings
         private const string FILE_NAME = "Settings.ini";
 
 
-        private static SettingManager m_instance;
+        private static SettingManager m_instance = null;
 
         /// <summary>
         /// The settings manager instance.
@@ -55,17 +54,12 @@ namespace Framework.Settings
 
 
         [SerializeField]
-        [Tooltip("Will all settings in the project automatically be added to the setting list.")]
+        [LeftToggle]
+        [Tooltip("Automatically add all settings in the project to the setting list.")]
         private bool m_autoAddSettings = true;
 
-        [Serializable]
-        public class SettingList : ReorderableArray<Setting>
-        {
-        }
-
         [SerializeField]
-        [Reorderable(singleLine = true)]
-        private SettingList m_settings = new SettingList();
+        private List<Setting> m_settings = null;
 
         private List<SettingCategory> m_categories = null;
         private Dictionary<SettingCategory, List<Setting>> m_categoryToSettings = null;
@@ -73,7 +67,7 @@ namespace Framework.Settings
         /// <summary>
         /// The categories the settings are grouped by.
         /// </summary>
-        public IReadOnlyList<SettingCategory> Catergories => m_categories as IReadOnlyList<SettingCategory>;
+        public IReadOnlyList<SettingCategory> Catergories => m_categories;
 
 
         /// <summary>
@@ -81,16 +75,15 @@ namespace Framework.Settings
         /// </summary>
         private void Initialize()
         {
-            // get the grouping of setting by category
+            // build the grouping of setting by category
             m_categories = new List<SettingCategory>();
             m_categoryToSettings = new Dictionary<SettingCategory, List<Setting>>();
 
-            for (int i = 0; i < m_settings.Length; i++)
+            for (var i = 0; i < m_settings.Count; i++)
             {
-                SettingCategory category = m_settings[i].Category;
+                var category = m_settings[i].Category;
 
-                List<Setting> settings;
-                if (!m_categoryToSettings.TryGetValue(category, out settings))
+                if (!m_categoryToSettings.TryGetValue(category, out var settings))
                 {
                     m_categories.Add(category);
 
@@ -102,7 +95,7 @@ namespace Framework.Settings
             }
 
             // prepare all the settings
-            foreach (Setting setting in m_settings)
+            foreach (var setting in m_settings)
             {
                 setting.Initialize();
             }
@@ -118,9 +111,9 @@ namespace Framework.Settings
         /// <returns>The settings list for the category.</returns>
         public IReadOnlyList<Setting> GetSettings(SettingCategory category)
         {
-            if (category != null && m_categoryToSettings.TryGetValue(category, out List<Setting> settings))
+            if (category != null && m_categoryToSettings.TryGetValue(category, out var settings))
             {
-                return settings as IReadOnlyList<Setting>;
+                return settings;
             }
             return null;
         }
@@ -130,9 +123,9 @@ namespace Framework.Settings
         /// </summary>
         public void Load()
         {
-            string path = Path.Combine(FileIO.GetConfigDirectory(), FILE_NAME);
+            var path = Path.Combine(FileIO.GetConfigDirectory(), FILE_NAME);
 
-            if (FileIO.ReadFileText(path, out string json))
+            if (FileIO.ReadFileText(path, out var json))
             {
                 SettingSerializer.FromJson(json, m_settings);
 
@@ -149,7 +142,7 @@ namespace Framework.Settings
         /// </summary>
         public void Save()
         {
-            string path = Path.Combine(FileIO.GetConfigDirectory(), FILE_NAME);
+            var path = Path.Combine(FileIO.GetConfigDirectory(), FILE_NAME);
 
             if (FileIO.WriteFile(path, SettingSerializer.ToJson(m_categoryToSettings)))
             {
@@ -172,12 +165,11 @@ namespace Framework.Settings
         {
             switch (state)
             {
-                case PlayModeStateChange.EnteredPlayMode:
+                case PlayModeStateChange.ExitingEditMode:
                 {
-                    if (Instance != null && Instance.m_autoAddSettings)
+                    if (Instance != null)
                     {
-                        Instance.AddAllSettings();
-                        Instance.ValidateSettings();
+                        Instance.OnBuild();
                     }
                     break;
                 }
@@ -185,41 +177,45 @@ namespace Framework.Settings
         }
 
         /// <summary>
-        /// Adds a setting to the settings included in the build.
+        /// Ensures the settings list is up to date and validates the settings.
         /// </summary>
-        /// <param name="setting">The setting to add.</param>
-        private void AddSetting(Setting setting)
+        internal void OnBuild()
         {
-            if (m_autoAddSettings && !m_settings.Contains(setting))
+            if (m_autoAddSettings)
             {
-                m_settings.Add(setting);
+                AddAllSettings();
+                ValidateSettings();
             }
         }
 
         /// <summary>
         /// Adds all settings in the project to the settings list.
         /// </summary>
-        public void AddAllSettings()
+        internal void AddAllSettings()
         {
-            if (m_autoAddSettings)
+            foreach (var guid in AssetDatabase.FindAssets($"t:{typeof(Setting).FullName}"))
             {
-                foreach (string guid in AssetDatabase.FindAssets($"t:{typeof(Setting).FullName}"))
-                {
-                    AddSetting(AssetDatabase.LoadAssetAtPath<Setting>(AssetDatabase.GUIDToAssetPath(guid)));
-                }
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var setting = AssetDatabase.LoadAssetAtPath<Setting>(path);
 
-                RemoveDuplicateSettings();
-                RemoveEmptySettings();
+                if (!m_settings.Contains(setting))
+                {
+                    m_settings.Add(setting);
+                }
             }
+
+            RemoveDuplicateSettings();
+            RemoveEmptySettings();
         }
 
         /// <summary>
         /// Ensures each setting is only assigned once to the settings list.
         /// </summary>
-        public void RemoveDuplicateSettings()
+        internal void RemoveDuplicateSettings()
         {
-            HashSet<Setting> settings = new HashSet<Setting>();
-            for (int i = 0; i < m_settings.Length; i++)
+            var settings = new HashSet<Setting>();
+
+            for (var i = 0; i < m_settings.Count; i++)
             {
                 if (settings.Contains(m_settings[i]))
                 {
@@ -232,12 +228,9 @@ namespace Framework.Settings
             }
         }
 
-        /// <summary>
-        /// Ensures all settings are assigned.
-        /// </summary>
-        public void RemoveEmptySettings()
+        private void RemoveEmptySettings()
         {
-            for (int i = 0; i < m_settings.Length;)
+            for (var i = 0; i < m_settings.Count;)
             {
                 if (m_settings[i] == null)
                 {
@@ -249,23 +242,19 @@ namespace Framework.Settings
                 }
             }
         }
-        
-        /// <summary>
-        /// Checks if all settings are valid.
-        /// </summary>
-        /// <returns>True if the settings are valid.</returns>
-        public bool ValidateSettings()
+
+        private bool ValidateSettings()
         {
-            bool valid = true;
-            
-            foreach (Setting setting in m_settings)
+            var valid = true;
+
+            foreach (var setting in m_settings)
             {
                 if (!setting.Validate())
                 {
                     valid = false;
                 }
             }
-            
+
             return valid;
         }
 #endif

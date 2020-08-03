@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+
+using UnityEditor;
 
 using UnityEngine;
-using UnityEditor;
 
 namespace Framework.EditorTools
 {
     /// <summary>
-    /// A utility window used to select a class type
+    /// A utility window used to select a class type.
     /// </summary>
     public class TypeSearchWindow : EditorWindow
     {
@@ -17,19 +17,19 @@ namespace Framework.EditorTools
         private const float WINDOW_HEIGHT = 300;
         private static readonly string SEARCH_FIELD_NAME = $"{nameof(TypeSearchWindow)}SearchField";
 
-        private static bool _focusSearchBox = false;
+        private static bool m_focusSearchBox = false;
 
-        private Vector2 _size;
-        private Action<Type> _applyType = null;
+        private Vector2 m_size;
+        private Action<Type> m_onComplete = null;
 
-        private Type[] _allTypes = null;
-        private string[] _allTypeNamesLower = null;
+        private Type[] m_allTypes = null;
+        private string[] m_allTypeNamesLower = null;
 
-        private Type[] _searchedTypes = null;
-        private string[] _searchedTypeNames = null;
+        private Type[] m_searchedTypes = null;
+        private string[] m_searchedTypeNames = null;
 
-        private string _search = string.Empty;
-        private Vector2 _scrollPos = Vector2.zero;
+        private string m_search = string.Empty;
+        private Vector2 m_scrollPos = Vector2.zero;
 
         /// <summary>
         /// Draws a type search selection dropdown.
@@ -39,57 +39,67 @@ namespace Framework.EditorTools
         /// <param name="onComplete">An action taken when a new type is selected.</param>
         public static void DrawDropdown(SerializedProperty typeProp, Func<Type, bool> filter = null, Action onComplete = null)
         {
-            Rect rect = EditorGUILayout.GetControlRect();
-            GUIContent content = EditorGUI.BeginProperty(rect, new GUIContent(typeProp.displayName), typeProp);
-            rect = EditorGUI.PrefixLabel(rect, content);
+            var rect = EditorGUILayout.GetControlRect();
 
-            EditorGUI.showMixedValue = typeProp.hasMultipleDifferentValues;
-
-            // draw the dropdown which opens the selection window
-            Type currentType = Type.GetType(typeProp.stringValue);
-            string displayValue = currentType == null ? string.Empty : currentType.Name;
-
-            if (EditorGUI.DropdownButton(rect, new GUIContent(displayValue), FocusType.Keyboard))
+            using (var property = new EditorGUI.PropertyScope(rect, new GUIContent(typeProp.displayName), typeProp))
             {
-                PickClass(rect, filter, (type) =>
-                {
-                    typeProp.stringValue = type?.AssemblyQualifiedName ?? string.Empty;
-                    typeProp.serializedObject.ApplyModifiedProperties();
-                    onComplete?.Invoke();
-                });
+                rect = EditorGUI.PrefixLabel(rect, property.content);
 
-                // focus the search field
-                _focusSearchBox = true;
+                EditorGUI.showMixedValue = typeProp.hasMultipleDifferentValues;
+
+                // draw the dropdown which opens the selection window
+                var currentType = Type.GetType(typeProp.stringValue);
+                var displayValue = currentType == null ? string.Empty : currentType.Name;
+
+                if (EditorGUI.DropdownButton(rect, new GUIContent(displayValue), FocusType.Keyboard))
+                {
+                    PickClass(rect, filter, (type) =>
+                    {
+                        typeProp.stringValue = type?.AssemblyQualifiedName ?? string.Empty;
+                        typeProp.serializedObject.ApplyModifiedProperties();
+                        onComplete?.Invoke();
+                    });
+
+                    // focus the search field
+                    m_focusSearchBox = true;
+                }
             }
         }
 
-        public static void PickClass(Rect dropdown, Func<Type, bool> filter, Action<Type> applyType)
+        /// <summary>
+        /// Draws a window used to pick a type.
+        /// </summary>
+        /// <param name="dropdown">The rect to position the window under.</param>
+        /// <param name="filter">A filter which controls which types can be selected.</param>
+        /// <param name="onComplete">The action taken once a type has been selected.</param>
+        public static void PickClass(Rect dropdown, Func<Type, bool> filter, Action<Type> onComplete)
         {
-            TypeSearchWindow window = CreateInstance<TypeSearchWindow>();
+            var window = CreateInstance<TypeSearchWindow>();
 
             // size the window to appropriately fit the content type
-            Vector2 size = new Vector2(WINDOW_WIDTH, WINDOW_HEIGHT);
+            var size = new Vector2(WINDOW_WIDTH, WINDOW_HEIGHT);
 
             // draw the window below the control that initiated the selection
             dropdown.position = GUIUtility.GUIToScreenPoint(dropdown.position);
             window.ShowAsDropDown(dropdown, size);
 
-            window._size = size;
-            window._applyType = applyType;
+            window.m_size = size;
+            window.m_onComplete = onComplete;
 
             // load all the relevant type information
-            window.GetAllTypes(filter);
-            window.GetSearchTypes();
+            window.FindAllTypes(filter);
+            window.SearchTypes();
         }
 
         private void OnGUI()
         {
             DrawWindowOutline();
 
-            EditorGUILayout.BeginHorizontal();
-            DrawSearchBox();
-            DrawNoneButton();
-            EditorGUILayout.EndHorizontal();
+            using (new GUILayout.HorizontalScope())
+            {
+                DrawSearchBox();
+                DrawNoneButton();
+            }
 
             DrawTypeBox();
         }
@@ -97,12 +107,12 @@ namespace Framework.EditorTools
         private void DrawWindowOutline()
         {
             const float outlineWidth = 1.0f;
-            Rect[] rects = new Rect[]
+            var rects = new Rect[]
             {
-                new Rect(0, 0, outlineWidth, _size.y),
-                new Rect(0, 0, _size.x, outlineWidth),
-                new Rect(0, _size.y - outlineWidth, _size.x, outlineWidth),
-                new Rect(_size.x - outlineWidth, 0, outlineWidth, _size.y),
+                new Rect(0, 0, outlineWidth, m_size.y),
+                new Rect(0, 0, m_size.x, outlineWidth),
+                new Rect(0, m_size.y - outlineWidth, m_size.x, outlineWidth),
+                new Rect(m_size.x - outlineWidth, 0, outlineWidth, m_size.y),
             };
 
             GUI.color = new Color(0.5f, 0.5f, 0.5f);
@@ -115,22 +125,23 @@ namespace Framework.EditorTools
             EditorGUILayout.LabelField("Search", GUILayout.Width(50f));
 
             // get the search text, updaing the shown types if changed
-            EditorGUI.BeginChangeCheck();
-
-            GUI.SetNextControlName(SEARCH_FIELD_NAME);
-            _search = EditorGUILayout.TextField(_search);
-
-            if (EditorGUI.EndChangeCheck())
+            using (var change = new EditorGUI.ChangeCheckScope())
             {
-                GetSearchTypes();
+                GUI.SetNextControlName(SEARCH_FIELD_NAME);
+                m_search = EditorGUILayout.TextField(m_search);
+
+                if (change.changed)
+                {
+                    SearchTypes();
+                }
             }
 
             // focus the search field when requested
-            if (_focusSearchBox)
+            if (m_focusSearchBox)
             {
                 GUI.FocusControl(SEARCH_FIELD_NAME);
                 EditorGUI.FocusTextInControl(SEARCH_FIELD_NAME);
-                _focusSearchBox = false;
+                m_focusSearchBox = false;
             }
         }
 
@@ -144,66 +155,60 @@ namespace Framework.EditorTools
 
         private void DrawTypeBox()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            _scrollPos = GUILayout.BeginScrollView(_scrollPos);
-
-            for (int i = 0; i < _searchedTypes.Length; i++)
+            using (new GUILayout.VerticalScope(EditorStyles.helpBox))
+            using (var scroll = new GUILayout.ScrollViewScope(m_scrollPos))
             {
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Select", EditorStyles.miniButton, GUILayout.MaxWidth(60f)))
+                for (var i = 0; i < m_searchedTypes.Length; i++)
                 {
-                    Complete(_searchedTypes[i]);
+                    using (new GUILayout.HorizontalScope())
+                    {
+                        if (GUILayout.Button("Select", EditorStyles.miniButton, GUILayout.MaxWidth(60f)))
+                        {
+                            Complete(m_searchedTypes[i]);
+                        }
+                        GUILayout.Label(m_searchedTypeNames[i]);
+                    }
                 }
-                GUILayout.Label(_searchedTypeNames[i]);
-                GUILayout.EndHorizontal();
-            }
 
-            GUILayout.EndScrollView();
-            EditorGUILayout.EndVertical();
+                m_scrollPos = scroll.scrollPosition;
+            }
         }
 
         private void Complete(Type type)
         {
-            _applyType?.Invoke(type);
+            m_onComplete?.Invoke(type);
             Close();
         }
 
-        private void GetAllTypes(Func<Type, bool> filter)
+        private void FindAllTypes(Func<Type, bool> filter)
         {
-            List<Type> allTypes = new List<Type>();
-
-            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                foreach (Type type in assembly.GetTypes())
-                {
-                    if (filter(type))
-                    {
-                        allTypes.Add(type);
-                    }
-                }
-            }
-
             // sort the types and cache their full names
-            _allTypes = allTypes.OrderBy(t => t.FullName).ToArray();
-            _allTypeNamesLower = _allTypes.Select(t => t.FullName.ToLowerInvariant()).ToArray();
+            m_allTypes = AppDomain.CurrentDomain.GetAssemblies().AsParallel()
+                .SelectMany(a => a.GetTypes())
+                .Where(t => filter(t))
+                .OrderBy(t => t.FullName)
+                .ToArray();
+
+            m_allTypeNamesLower = m_allTypes
+                .Select(t => t.FullName.ToLowerInvariant())
+                .ToArray();
         }
 
-        private void GetSearchTypes()
+        private void SearchTypes()
         {
-            string searchValue = _search.ToLowerInvariant();
+            var searchValue = m_search.ToLowerInvariant();
+            var searchTypes = new List<Type>();
 
-            List<Type> searchTypes = new List<Type>();
-
-            for (int i = 0; i < _allTypeNamesLower.Length; i++)
+            for (var i = 0; i < m_allTypeNamesLower.Length; i++)
             {
-                if (_allTypeNamesLower[i].Contains(searchValue))
+                if (m_allTypeNamesLower[i].Contains(searchValue))
                 {
-                    searchTypes.Add(_allTypes[i]);
+                    searchTypes.Add(m_allTypes[i]);
                 }
             }
 
-            _searchedTypes = searchTypes.ToArray();
-            _searchedTypeNames = _searchedTypes.Select(t => t.FullName).ToArray();
+            m_searchedTypes = searchTypes.ToArray();
+            m_searchedTypeNames = m_searchedTypes.Select(t => t.FullName).ToArray();
         }
     }
 }

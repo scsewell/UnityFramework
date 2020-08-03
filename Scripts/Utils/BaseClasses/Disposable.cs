@@ -10,7 +10,7 @@ namespace Framework
     public abstract class Disposable : IDisposable
     {
         /// <summary>
-        /// Indicates if this instance has been disposed.
+        /// Has this instance has been disposed.
         /// </summary>
         public bool Disposed { get; private set; } = false;
 

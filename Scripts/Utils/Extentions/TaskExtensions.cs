@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Framework
 {
+    /// <summary>
+    /// A class containing <see cref="Task"/> extention methods.
+    /// </summary>
     public static class TaskExtensions
     {
         public static IEnumerator AsIEnumerator(this Task task)

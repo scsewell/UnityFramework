@@ -25,7 +25,7 @@ namespace Framework.AssetBundles
         private string m_scene = null;
         private bool m_sceneHasBeenUnloaded = false;
         private List<WeakReference> m_references = null;
-        
+
         /// <summary>
         /// Get if any assets from this bundle are currently in use. 
         /// </summary>
@@ -43,29 +43,26 @@ namespace Framework.AssetBundles
                 }
 
                 // Get the bundle. This will not block, since we know the task has finished
-                AssetBundle bundle = m_loadBundleOp.GetAwaiter().GetResult();
+                var bundle = m_loadBundleOp.GetAwaiter().GetResult();
 
                 if (bundle.isStreamedSceneAssetBundle)
                 {
                     // this bundle is needed until its scene is no longer loaded
-                    if (!m_sceneHasBeenUnloaded)
-                    {
-                        return true;
-                    }
+                    return !m_sceneHasBeenUnloaded;
                 }
                 else
                 {
                     // this bundle is needed if any of its assets are referenced in code
-                    foreach (WeakReference reference in m_references)
+                    foreach (var reference in m_references)
                     {
                         if (reference.IsAlive)
                         {
                             return true;
                         }
                     }
-                }
 
-                return false;
+                    return false;
+                }
             }
         }
 
@@ -95,7 +92,7 @@ namespace Framework.AssetBundles
 
                 // Synchronously wait until the bundle has been loaded before unloading it to
                 // ensure correct behaviour.
-                AssetBundle bundle = m_loadBundleOp.GetAwaiter().GetResult();
+                var bundle = m_loadBundleOp.GetAwaiter().GetResult();
 
                 // clean up event subscriptions
                 if (bundle.isStreamedSceneAssetBundle)
@@ -120,7 +117,7 @@ namespace Framework.AssetBundles
         {
             EnsureNotDisposed();
 
-            AssetBundle bundle = await m_loadBundleOp;
+            var bundle = await m_loadBundleOp;
 
             // check if this bundle contains assets
             if (bundle.isStreamedSceneAssetBundle)
@@ -132,7 +129,7 @@ namespace Framework.AssetBundles
             // Load the asset from the bundle. After testing the asset loading behaviour, 
             // repeated calls will reference the same managed object, as long as the bundle is
             // not unloaded.
-            T asset = await bundle.LoadAssetAsync<T>(assetName) as T;
+            var asset = await bundle.LoadAssetAsync<T>(assetName) as T;
 
             // Keep track that this asset is loaded. This is done using a weak reference to the 
             // asset object. We can check when the managed asset object is garbage collected, 
@@ -150,7 +147,7 @@ namespace Framework.AssetBundles
         {
             EnsureNotDisposed();
 
-            AssetBundle bundle = await m_loadBundleOp;
+            var bundle = await m_loadBundleOp;
 
             // check if this bundle contains scene contents
             if (!bundle.isStreamedSceneAssetBundle)
@@ -171,7 +168,7 @@ namespace Framework.AssetBundles
         private async Task<AssetBundle> LoadBundleAsync()
         {
             // load the asset bundle
-            AssetBundle bundle = await AssetBundle.LoadFromFileAsync(m_filePath);
+            var bundle = await AssetBundle.LoadFromFileAsync(m_filePath);
 
             // prepare to track use of the bundle
             if (bundle.isStreamedSceneAssetBundle)

@@ -4,9 +4,13 @@ using UnityEngine.UI;
 
 namespace Framework.UI
 {
+    /// <summary>
+    /// A component used to make a <see cref="ScrollRect"/> autoscroll to the selected item.
+    /// </summary>
     public class EventSensitiveScrollRect : MonoBehaviour
     {
         [SerializeField]
+        [Tooltip("The amount of space between the selected item and the top/bottom of the scroll view.")]
         [Range(0f, 1f)]
         private float m_scrollMargin = 0.3f;
 
@@ -20,7 +24,7 @@ namespace Framework.UI
 
         private void LateUpdate()
         {
-            GameObject lastSelected = m_selected;
+            var lastSelected = m_selected;
             m_selected = EventSystem.current.currentSelectedGameObject;
 
             if (m_selected == null || m_selected == lastSelected || !m_selected.transform.IsChildOf(m_scrollRect.content))
@@ -28,18 +32,18 @@ namespace Framework.UI
                 return;
             }
 
-            RectTransform rt = m_selected.GetComponent<RectTransform>();
+            var rt = m_selected.GetComponent<RectTransform>();
 
-            float contentHeight = m_scrollRect.content.rect.height;
-            float viewportHeight = m_scrollRect.viewport.rect.height;
+            var contentHeight = m_scrollRect.content.rect.height;
+            var viewportHeight = m_scrollRect.viewport.rect.height;
 
-            float centerLine = rt.localPosition.y;
-            float upperBound = centerLine + (rt.rect.height / 2f);
-            float lowerBound = centerLine - (rt.rect.height / 2f);
+            var centerLine = rt.localPosition.y;
+            var upperBound = centerLine + (rt.rect.height / 2f);
+            var lowerBound = centerLine - (rt.rect.height / 2f);
 
             // what are the bounds of the currently visible area?
-            float lowerVisible = (contentHeight - viewportHeight) * m_scrollRect.normalizedPosition.y - contentHeight;
-            float upperVisible = lowerVisible + viewportHeight;
+            var lowerVisible = (contentHeight - viewportHeight) * m_scrollRect.normalizedPosition.y - contentHeight;
+            var upperVisible = lowerVisible + viewportHeight;
 
             // is our item visible right now?
             float desiredLowerBound;
@@ -60,7 +64,7 @@ namespace Framework.UI
             }
 
             // normalize and set the desired viewport
-            float normalizedDesired = Mathf.Clamp01((desiredLowerBound + contentHeight) / (contentHeight - viewportHeight));
+            var normalizedDesired = Mathf.Clamp01((desiredLowerBound + contentHeight) / (contentHeight - viewportHeight));
 
             m_scrollRect.normalizedPosition = new Vector2(0f, normalizedDesired);
         }

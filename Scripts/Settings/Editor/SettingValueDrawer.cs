@@ -1,85 +1,36 @@
-﻿using System;
+﻿using UnityEditor;
 
 using UnityEngine;
-using UnityEditor;
 
 namespace Framework.Settings
 {
-    public static class SettingValueDrawer
+    internal static class SettingValueDrawer
     {
-        public static void DrawSettingValueSelector(Rect rect, Setting setting, SerializedProperty value)
+        public static void Draw(Rect pos, GUIContent label, SerializedProperty prop, Setting setting)
         {
-            if (setting == null)
+            using (var property = new EditorGUI.PropertyScope(pos, label, prop))
+            using (var change = new EditorGUI.ChangeCheckScope())
             {
-                return;
-            }
-
-            EditorGUI.BeginProperty(rect, null, value);
-            EditorGUI.showMixedValue = value.hasMultipleDifferentValues;
-
-            EditorGUI.BeginChangeCheck();
-
-            string oldValue = value.stringValue;
-            string newValue = null;
-
-            switch (setting)
-            {
-                case BoolSetting s:
+                if (label != GUIContent.none)
                 {
-                    s.Deserialize(oldValue, out bool deserialized);
-                    newValue = s.Serialize(s.Sanitize(EditorGUI.Toggle(rect, deserialized)));
-                    break;
+                    pos = EditorGUI.PrefixLabel(pos, property.content);
                 }
-                case IntSetting s:
-                {
-                    s.Deserialize(oldValue, out int deserialized);
-                    newValue = s.Serialize(s.Sanitize(EditorGUI.IntSlider(rect, deserialized, s.Min, s.Max)));
-                    break;
-                }
-                case FloatSetting s:
-                {
-                    s.Deserialize(oldValue, out float deserialized);
-                    newValue = s.Serialize(s.Sanitize(EditorGUI.Slider(rect, deserialized, s.Min, s.Max)));
-                    break;
-                }
-                case EnumSetting s:
-                {
-                    if (s.Type != null)
-                    {
-                        Array values = Enum.GetValues(s.Type);
 
-                        s.Deserialize(oldValue, out Enum deserialized);
-                        int oldSelected = Mathf.Max(0, Array.IndexOf(values, deserialized));
-                        int newSelected = Mathf.Max(0, EditorGUI.Popup(rect, oldSelected, s.DisplayValues));
-                        Enum selected = (Enum)values.GetValue(newSelected);
+                if (setting == null)
+                {
+                    return;
+                }
 
-                        newValue = s.Serialize(s.Sanitize(selected));
-                    }
-                    else
-                    {
-                        EditorGUI.LabelField(rect, "Assign enum type");
-                    }
-                    break;
-                }
-                case StringSetting s:
+                EditorGUI.showMixedValue = prop.hasMultipleDifferentValues;
+
+                var oldValue = prop.stringValue;
+                var newValue = setting.OnInspectorGUI(pos, oldValue);
+
+                if (change.changed || string.IsNullOrEmpty(oldValue))
                 {
-                    s.Deserialize(oldValue, out string deserialized);
-                    newValue = s.Serialize(s.Sanitize(EditorGUI.TextField(rect, deserialized)));
-                    break;
-                }
-                default:
-                {
-                    EditorGUI.LabelField(rect, "Not Configurable");
-                    break;
+                    prop.stringValue = newValue;
                 }
             }
-
-            if (EditorGUI.EndChangeCheck() || oldValue == string.Empty)
-            {
-                value.stringValue = newValue;
-            }
-
-            EditorGUI.EndProperty();
         }
     }
 }

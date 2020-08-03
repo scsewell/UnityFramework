@@ -1,24 +1,24 @@
 ﻿using System;
 using System.Linq;
 
-using UnityEngine;
+using Framework.EditorTools;
+
 using UnityEditor;
 
-using Framework.EditorTools;
+using UnityEngine;
 
 namespace Framework.AssetBundles
 {
     [CustomPropertyDrawer(typeof(AssetBundleReference), true)]
-    public class AssetBundleReferenceEditor : PropertyDrawer
+    internal class AssetBundleReferenceEditor : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            SerializedProperty assetGuid = property.FindPropertyRelative("m_assetGuid");
+            var assetGuid = property.FindPropertyRelative("m_assetGuid");
 
             // get the type of reference
-            object[] references = SerializedObjectUtils.GetPropertyField(property);
-
-            Type fieldType = references.FirstOrDefault().GetType();
+            var references = property.GetPropertyFields().Cast<AssetBundleReference>();
+            var fieldType = references.FirstOrDefault().GetType();
 
             Type type;
             if (fieldType.IsAssignableFrom(typeof(AssetBundleSceneReference)))
@@ -33,53 +33,52 @@ namespace Framework.AssetBundles
             }
 
             // get the current reference value
-            string oldGuid = assetGuid.stringValue;
-            string oldPath = AssetDatabase.GUIDToAssetPath(oldGuid);
-            UnityEngine.Object oldAsset = AssetDatabase.LoadAssetAtPath(oldPath, type);
+            var oldGuid = assetGuid.stringValue;
+            var oldPath = AssetDatabase.GUIDToAssetPath(oldGuid);
+            var oldAsset = AssetDatabase.LoadAssetAtPath(oldPath, type);
 
             // draw an object field to select the asset
-            label = EditorGUI.BeginProperty(position, label, property);
-            position = EditorGUI.PrefixLabel(position, label);
-
-            EditorGUI.BeginChangeCheck();
-            EditorGUI.showMixedValue = property.hasMultipleDifferentValues;
-
-            Rect referenceRect = position;
-            referenceRect.xMax -= 20f;
-            UnityEngine.Object newAsset = EditorGUI.ObjectField(referenceRect, oldAsset, type, false);
-
-            if (EditorGUI.EndChangeCheck())
+            using (var prop = new EditorGUI.PropertyScope(position, label, property))
             {
-                string newPath = AssetDatabase.GetAssetPath(newAsset);
-                string newGuid = AssetDatabase.AssetPathToGUID(newPath);
-                assetGuid.stringValue = newGuid;
-            }
+                position = EditorGUI.PrefixLabel(position, prop.content);
 
-            EditorGUI.showMixedValue = false;
-            EditorGUI.EndProperty();
+                using (var change = new EditorGUI.ChangeCheckScope())
+                {
+                    EditorGUI.showMixedValue = property.hasMultipleDifferentValues;
+
+                    var referenceRect = position;
+                    referenceRect.xMax -= 20f;
+                    var newAsset = EditorGUI.ObjectField(referenceRect, oldAsset, type, false);
+
+                    if (change.changed)
+                    {
+                        var newPath = AssetDatabase.GetAssetPath(newAsset);
+                        var newGuid = AssetDatabase.AssetPathToGUID(newPath);
+                        assetGuid.stringValue = newGuid;
+                    }
+                }
+            }
 
             // update the reference to make sure it is valid
             property.serializedObject.ApplyModifiedProperties();
 
-            foreach (object reference in references)
+            foreach (var reference in references)
             {
-                (reference as AssetBundleReference).UpdateBundlePath();
+                reference.UpdateBundlePath();
             }
 
             property.serializedObject.Update();
 
-            // indicate if the reference is bundled
+            // indicate if the referenced object resides in an asset bundle
             if (!assetGuid.hasMultipleDifferentValues)
             {
-                bool isBundled = (references.First() as AssetBundleReference).IsBundled;
-
-                Rect indicatorRect = default;
+                var indicatorRect = default(Rect);
                 indicatorRect.xMin = position.xMax - 15f;
                 indicatorRect.xMax = position.xMax - 5f;
                 indicatorRect.yMin = position.yMin + 4f;
                 indicatorRect.yMax = position.yMax - 4f;
 
-                EditorGUI.DrawRect(indicatorRect, isBundled ? Color.green : Color.red);
+                EditorGUI.DrawRect(indicatorRect, references.First().IsBundled ? Color.green : Color.red);
             }
         }
     }

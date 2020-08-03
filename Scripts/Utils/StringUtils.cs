@@ -18,9 +18,9 @@ namespace Framework
                 return $"0 {suffix[0]}";
             }
 
-            long bytes = Math.Abs(byteCount);
-            int place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1000.0)));
-            double num = Math.Round(bytes / Math.Pow(1000.0, place), 1);
+            var bytes = Math.Abs(byteCount);
+            var place = Convert.ToInt32(Math.Floor(Math.Log(bytes, 1000.0)));
+            var num = Math.Round(bytes / Math.Pow(1000.0, place), 1);
             return $"{Math.Sign(byteCount) * num} {suffix[place]}";
         }
     }

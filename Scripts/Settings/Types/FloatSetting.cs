@@ -7,23 +7,20 @@ namespace Framework.Settings
     [CreateAssetMenu(fileName = "Float Setting", menuName = "Framework/Settings/Float", order = 3)]
     public class FloatSetting : RangeSetting<float>
     {
-        /// <summary>
-        /// The min value allowed.
-        /// </summary>
+        /// <inheritdoc/>
         public override float Min => m_range.Min;
 
-        /// <summary>
-        /// The max value allowed.
-        /// </summary>
+        /// <inheritdoc/>
         public override float Max => m_range.Max;
 
-        public override void Initialize()
+        /// <inheritdoc/>
+        internal override void Initialize()
         {
             base.Initialize();
 
-            List<string> values = new List<string>();
+            var values = new List<string>();
 
-            float num = Min;
+            var num = Min;
             while (num <= Max)
             {
                 if (values.Count == MAX_DISPLAY_VALUES)
@@ -39,19 +36,31 @@ namespace Framework.Settings
             m_displayValues = values.ToArray();
         }
 
-        public override float Sanitize(float newValue)
+        /// <inheritdoc/>
+        internal override float Sanitize(float newValue)
         {
             return SnapToRange(newValue);
         }
 
-        public override bool Deserialize(string serialized, out float value)
+        /// <inheritdoc/>
+        internal override bool Deserialize(string serialized, out float value)
         {
             return float.TryParse(serialized, out value);
         }
 
-        public override string Serialize(float value)
+        /// <inheritdoc/>
+        internal override string Serialize(float value)
         {
             return value.ToString();
         }
+
+#if UNITY_EDITOR
+        /// <inheritdoc/>
+        internal override string OnInspectorGUI(Rect pos, string serializedValue)
+        {
+            Deserialize(serializedValue, out var deserialized);
+            return Serialize(Sanitize(UnityEditor.EditorGUI.Slider(pos, deserialized, Min, Max)));
+        }
+#endif
     }
 }

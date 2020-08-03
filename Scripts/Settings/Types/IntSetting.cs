@@ -7,23 +7,20 @@ namespace Framework.Settings
     [CreateAssetMenu(fileName = "Int Setting", menuName = "Framework/Settings/Int", order = 2)]
     public class IntSetting : RangeSetting<int>
     {
-        /// <summary>
-        /// The min value allowed.
-        /// </summary>
+        /// <inheritdoc/>
         public override int Min => Mathf.RoundToInt(SnapToRange(m_range.Min));
 
-        /// <summary>
-        /// The max value allowed.
-        /// </summary>
+        /// <inheritdoc/>
         public override int Max => Mathf.RoundToInt(SnapToRange(m_range.Max));
 
-        public override void Initialize()
+        /// <inheritdoc/>
+        internal override void Initialize()
         {
             base.Initialize();
 
-            List<string> values = new List<string>();
+            var values = new List<string>();
 
-            int num = Min;
+            var num = Min;
             while (num <= Max)
             {
                 if (values.Count == MAX_DISPLAY_VALUES)
@@ -39,19 +36,31 @@ namespace Framework.Settings
             m_displayValues = values.ToArray();
         }
 
-        public override int Sanitize(int newValue)
+        /// <inheritdoc/>
+        internal override int Sanitize(int newValue)
         {
             return Mathf.RoundToInt(SnapToRange(newValue));
         }
 
-        public override bool Deserialize(string serialized, out int value)
+        /// <inheritdoc/>
+        internal override bool Deserialize(string serialized, out int value)
         {
             return int.TryParse(serialized, out value);
         }
 
-        public override string Serialize(int value)
+        /// <inheritdoc/>
+        internal override string Serialize(int value)
         {
             return value.ToString();
         }
+
+#if UNITY_EDITOR
+        /// <inheritdoc/>
+        internal override string OnInspectorGUI(Rect pos, string serializedValue)
+        {
+            Deserialize(serializedValue, out var deserialized);
+            return Serialize(Sanitize(UnityEditor.EditorGUI.IntSlider(pos, deserialized, Min, Max)));
+        }
+#endif
     }
 }

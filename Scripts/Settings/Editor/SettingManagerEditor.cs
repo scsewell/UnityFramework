@@ -1,11 +1,12 @@
-﻿using UnityEngine;
-using UnityEditor;
+﻿using UnityEditor;
+
+using UnityEngine;
 
 namespace Framework.Settings
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(SettingManager))]
-    public class SettingManagerEditor : Editor
+    internal class SettingManagerEditor : Editor
     {
         protected SerializedProperty m_autoAddSettings = null;
         protected SerializedProperty m_settings = null;
@@ -18,21 +19,25 @@ namespace Framework.Settings
 
         public override void OnInspectorGUI()
         {
-            SettingManager manager = target as SettingManager;
+            var manager = target as SettingManager;
 
             serializedObject.Update();
 
-            EditorGUILayout.BeginHorizontal();
-
-            EditorGUILayout.PropertyField(m_autoAddSettings);
-            serializedObject.ApplyModifiedProperties();
-
-            if (GUILayout.Button("Add All Settings"))
+            using (new GUILayout.HorizontalScope())
             {
-                manager.AddAllSettings();
-            }
+                EditorGUILayout.PropertyField(m_autoAddSettings);
+                serializedObject.ApplyModifiedProperties();
 
-            EditorGUILayout.EndHorizontal();
+                GUILayout.FlexibleSpace();
+
+                using (new EditorGUI.DisabledScope(m_autoAddSettings.boolValue))
+                {
+                    if (GUILayout.Button("Add All Settings"))
+                    {
+                        manager.AddAllSettings();
+                    }
+                }
+            }
 
             manager.RemoveDuplicateSettings();
             serializedObject.Update();

@@ -6,10 +6,15 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
+
 using UnityEngine;
 
 namespace Framework
 {
+    /// <summary>
+    /// A class that contains extention methods used to make coroutines
+    /// async/await compatible.
+    /// </summary>
     public static class IEnumeratorExtensions
     {
         public static SimpleCoroutineAwaiter GetAwaiter(this WaitForSeconds instruction)
@@ -138,9 +143,9 @@ namespace Framework
 
         public class SimpleCoroutineAwaiter : INotifyCompletion
         {
-            bool m_isDone = false;
-            Exception m_exception = null;
-            Action m_continuation = null;
+            private bool m_isDone = false;
+            private Exception m_exception = null;
+            private Action m_continuation = null;
 
             public bool IsCompleted => m_isDone;
 
@@ -171,10 +176,10 @@ namespace Framework
 
         public class SimpleCoroutineAwaiter<T> : INotifyCompletion
         {
-            bool m_isDone = false;
-            Exception m_exception = null;
-            Action m_continuation = null;
-            T m_result = default;
+            private bool m_isDone = false;
+            private Exception m_exception = null;
+            private Action m_continuation = null;
+            private T m_result = default;
 
             public bool IsCompleted => m_isDone;
 
@@ -221,7 +226,7 @@ namespace Framework
             {
                 while (true)
                 {
-                    IEnumerator topWorker = m_processStack.Peek();
+                    var topWorker = m_processStack.Peek();
 
                     bool isDone;
 
@@ -235,7 +240,7 @@ namespace Framework
                         // actual names of the coroutine methods but it does tell us the objects
                         // that the IEnumerators are associated with, so we can at least try
                         // adding that to the exception output.
-                        List<Type> objectTrace = GenerateObjectTrace(m_processStack);
+                        var objectTrace = GenerateObjectTrace(m_processStack);
 
                         if (objectTrace.Any())
                         {
@@ -278,9 +283,9 @@ namespace Framework
 
             private string GenerateObjectTraceMessage(List<Type> objTrace)
             {
-                StringBuilder result = new StringBuilder();
+                var result = new StringBuilder();
 
-                foreach (Type objType in objTrace)
+                foreach (var objType in objTrace)
                 {
                     if (result.Length != 0)
                     {
@@ -296,25 +301,25 @@ namespace Framework
 
             private static List<Type> GenerateObjectTrace(IEnumerable<IEnumerator> enumerators)
             {
-                List<Type> objTrace = new List<Type>();
+                var objTrace = new List<Type>();
 
                 foreach (var enumerator in enumerators)
                 {
-                    FieldInfo field = enumerator.GetType().GetField("$this", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    var field = enumerator.GetType().GetField("$this", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 
                     if (field == null)
                     {
                         continue;
                     }
 
-                    object obj = field.GetValue(enumerator);
+                    var obj = field.GetValue(enumerator);
 
                     if (obj == null)
                     {
                         continue;
                     }
 
-                    Type objType = obj.GetType();
+                    var objType = obj.GetType();
 
                     if (!objTrace.Any() || objType != objTrace.Last())
                     {

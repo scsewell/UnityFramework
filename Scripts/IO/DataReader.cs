@@ -1,7 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.IO;
 
 namespace Framework.IO
 {
@@ -72,7 +72,7 @@ namespace Framework.IO
             IsStream = true;
             m_stream = stream;
 
-            byte[] buffer = new byte[4096];
+            var buffer = new byte[4096];
             Prepare(buffer, GCHandle.Alloc(buffer, GCHandleType.Pinned), 0);
 
             // load the initial data from the stream
@@ -107,7 +107,7 @@ namespace Framework.IO
             m_bufEnd = m_bufStart + m_buffer.Length;
             m_ptr = m_bufStart + offset;
         }
-        
+
         private unsafe void GetNextStreamedData(int dataSize, bool checkOverrun = true)
         {
             // only streams support reading additional data
@@ -120,12 +120,12 @@ namespace Framework.IO
             // As well, we must copy over the buffered data we have not read yet back
             // to the start of the buffer, where we will begin reading from. Then,
             // we read the next data from the stream until the buffer is full again.
-            int oldBytesRemaining = BytesRemaining;
+            var oldBytesRemaining = BytesRemaining;
 
             if (m_buffer.Length < dataSize)
             {
-                byte[] newBuffer = new byte[dataSize];
-                GCHandle newHandle = GCHandle.Alloc(newBuffer, GCHandleType.Pinned);
+                var newBuffer = new byte[dataSize];
+                var newHandle = GCHandle.Alloc(newBuffer, GCHandleType.Pinned);
 
                 Buffer.MemoryCopy(m_ptr.ToPointer(), newHandle.AddrOfPinnedObject().ToPointer(), oldBytesRemaining, oldBytesRemaining);
 
@@ -141,7 +141,7 @@ namespace Framework.IO
             }
 
             // read in the stream's next contents
-            int bytesRead = m_stream.Read(m_buffer, oldBytesRemaining, m_buffer.Length - oldBytesRemaining);
+            var bytesRead = m_stream.Read(m_buffer, oldBytesRemaining, m_buffer.Length - oldBytesRemaining);
 
             // if there wasn't enough data left in the stream, report a buffer overrun
             if (checkOverrun && oldBytesRemaining + bytesRead < dataSize)
@@ -161,7 +161,7 @@ namespace Framework.IO
                 GetNextStreamedData(sizeof(T));
             }
 
-            T value = *((T*)m_ptr);
+            var value = *((T*)m_ptr);
             m_ptr += sizeof(T);
             return value;
         }
@@ -178,17 +178,17 @@ namespace Framework.IO
                 throw new ArgumentOutOfRangeException(nameof(count), count, "Cannot be negative.");
             }
 
-            T[] array = new T[count];
+            var array = new T[count];
 
             if (count > 0)
             {
                 // pin the array in memory so it is safe to copy to
-                GCHandle handle = GCHandle.Alloc(array, GCHandleType.Pinned);
+                var handle = GCHandle.Alloc(array, GCHandleType.Pinned);
 
                 try
                 {
                     // get the size of the array in bytes
-                    int length = sizeof(T) * count;
+                    var length = sizeof(T) * count;
 
                     // if the read overruns the buffer, try to read in more data
                     if (BytesRemaining < length)
@@ -215,9 +215,9 @@ namespace Framework.IO
         /// </summary>
         public unsafe string ReadString()
         {
-            int length = Read<int>();
+            var length = Read<int>();
 
-            string value = Encoding.UTF8.GetString((byte*)m_ptr, length);
+            var value = Encoding.UTF8.GetString((byte*)m_ptr, length);
             m_ptr += length;
 
             return value;

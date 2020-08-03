@@ -2,6 +2,10 @@
 
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace Framework.Settings
 {
     /// <summary>
@@ -31,6 +35,10 @@ namespace Framework.Settings
         [SerializeField]
         [Tooltip("How the setting should be selected in the user interface.")]
         private SettingDisplayMode m_displayMode = SettingDisplayMode.Spinner;
+
+        /// <summary>
+        /// How the setting should be selected in the user interface.
+        /// </summary>
         public SettingDisplayMode DisplayMode => m_displayMode;
 
         [SerializeField]
@@ -52,11 +60,10 @@ namespace Framework.Settings
         /// </summary>
         public abstract string[] DisplayValues { get; }
 
-
         /// <summary>
         /// Initializes this setting.
         /// </summary>
-        public virtual void Initialize()
+        internal virtual void Initialize()
         {
             SerializedValue = m_defaultValue;
         }
@@ -71,9 +78,9 @@ namespace Framework.Settings
         /// Checks if this setting is valid.
         /// </summary>
         /// <returns>True if the setting is valid.</returns>
-        public virtual bool Validate()
+        internal virtual bool Validate()
         {
-            bool valid = true;
+            var valid = true;
 
             if (m_category == null)
             {
@@ -83,6 +90,20 @@ namespace Framework.Settings
 
             return valid;
         }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Draws the control used to select a setting value in the inspector.
+        /// </summary>
+        /// <param name="pos">The control rect.</param>
+        /// <param name="serializedValue">The current value of the setting.</param>
+        /// <returns>The new setting value.</returns>
+        internal virtual string OnInspectorGUI(Rect pos, string serializedValue)
+        {
+            EditorGUI.LabelField(pos, "Not configurable");
+            return default;
+        }
+#endif
     }
 
     /// <summary>
@@ -106,7 +127,7 @@ namespace Framework.Settings
             get => m_value;
             set
             {
-                T validated = Sanitize(value);
+                var validated = Sanitize(value);
 
                 // only update if the value has changed
                 if (!Equals(m_value, validated))
@@ -119,7 +140,8 @@ namespace Framework.Settings
             }
         }
 
-        public override void Initialize()
+        /// <inheritdoc/>
+        internal override void Initialize()
         {
             base.Initialize();
 
@@ -128,13 +150,10 @@ namespace Framework.Settings
             Deserialize(SerializedValue, out m_value);
         }
 
-        /// <summary>
-        /// Sets this setting from a serialized value.
-        /// </summary>
-        /// <param name="newValue">The new value.</param>
+        /// <inheritdoc/>
         public override void SetSerializedValue(string newValue)
         {
-            if (Deserialize(newValue, out T value))
+            if (Deserialize(newValue, out var value))
             {
                 Value = value;
             }
@@ -149,7 +168,7 @@ namespace Framework.Settings
         /// </summary>
         /// <param name="newValue">The value to validate.</param>
         /// <returns>The processed value/</returns>
-        public virtual T Sanitize(T newValue)
+        internal virtual T Sanitize(T newValue)
         {
             return newValue;
         }
@@ -158,7 +177,7 @@ namespace Framework.Settings
         /// Gets a string representation of this setting's value.
         /// </summary>
         /// <param name="value">The value to deserialize.</param>
-        public abstract string Serialize(T value);
+        internal abstract string Serialize(T value);
 
         /// <summary>
         /// Sets the value of this setting from a serialized value.
@@ -166,6 +185,6 @@ namespace Framework.Settings
         /// <param name="serialized">The serialized value.</param>
         /// <param name="value">The deserialized value.</param>
         /// <returns>True if the deserialization was successful.</returns>
-        public abstract bool Deserialize(string serialized, out T value);
+        internal abstract bool Deserialize(string serialized, out T value);
     }
 }

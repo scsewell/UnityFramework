@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-using UnityEngine;
+﻿using System.Linq;
 
 using UnityEditor;
 using UnityEditor.Build;
@@ -12,7 +9,7 @@ namespace Framework.Settings
     /// <summary>
     /// Manages configuring the settings prior to building.
     /// </summary>
-    public class SettingsBuild : IPreprocessBuildWithReport
+    internal class SettingsBuild : IPreprocessBuildWithReport
     {
         public int callbackOrder { get; } = 0;
 
@@ -20,8 +17,7 @@ namespace Framework.Settings
         {
             if (SettingManager.Instance != null)
             {
-                SettingManager.Instance.AddAllSettings();
-                SettingManager.Instance.ValidateSettings();
+                SettingManager.Instance.OnBuild();
 
                 // Add the settings manager asset to the build
                 var preloadedAssets = PlayerSettings.GetPreloadedAssets().ToList();

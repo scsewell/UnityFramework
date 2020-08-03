@@ -5,12 +5,17 @@ using UnityEngine.UI;
 
 namespace Framework.UI
 {
+    /// <summary>
+    /// A <see cref="NavigationBuilder"/> that manages a chain of vertically placed <see cref="Selectables"/>.
+    /// </summary>
     public class VerticalNavigationBuilder : NavigationBuilder
     {
         [SerializeField]
-        [Tooltip("The selectable in the selectable group to select when navigating from selectables to the left or right when configuring vertical navigation. By default this is the first selectable in the group.")]
+        [Tooltip("The selectable in the selectable group to select when navigating from selectables to the left or right when configuring vertical navigation. " +
+            "By default this is the first selectable in the group.")]
         private Selectable m_horizontalSelect = null;
 
+        /// <inheritdoc/>
         protected override List<Selectable> BuildNavigation()
         {
             return UIHelper.SetNavigationVertical(new NavConfig()

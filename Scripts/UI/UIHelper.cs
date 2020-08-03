@@ -6,11 +6,20 @@ using UnityEngine.UI;
 
 namespace Framework.UI
 {
+    /// <summary>
+    /// A class contanining utility methods for UGUI elements.
+    /// </summary>
     public static class UIHelper
     {
+        /// <summary>
+        /// Creates a child RectTransform under an object with an identity local transform.
+        /// </summary>
+        /// <param name="parent">The parent transform.</param>
+        /// <param name="name">The name the instantiated child object will use.</param>
+        /// <returns>The instantiated RectTransform.</returns>
         public static RectTransform Create(Transform parent, string name = "New UI Element")
         {
-            RectTransform rt = new GameObject(name).AddComponent<RectTransform>();
+            var rt = new GameObject(name).AddComponent<RectTransform>();
             rt.SetParent(parent, false);
             rt.localPosition = Vector3.zero;
             rt.localRotation = Quaternion.identity;
@@ -18,31 +27,45 @@ namespace Framework.UI
             return rt;
         }
 
+        /// <summary>
+        /// Instantaites a prefab under a parent object with an identity local transform.
+        /// </summary>
+        /// <typeparam name="T">A type of component.</typeparam>
+        /// <param name="prefab">The prefab to instantiate.</param>
+        /// <param name="parent">The parent transform.</param>
+        /// <param name="name">The name the instantiated child object will use.</param>
+        /// <returns>The new instance.</returns>
         public static T Create<T>(T prefab, Transform parent, string name = "") where T : Component
         {
-            T component = Object.Instantiate(prefab, parent);
+            var component = Object.Instantiate(prefab, parent);
 
             if (!string.IsNullOrWhiteSpace(name))
             {
                 component.gameObject.name = name;
             }
 
-            RectTransform rt = component.GetComponent<RectTransform>();
-            if (rt == null)
+            if (component.TryGetComponent<RectTransform>(out var rt))
             {
                 rt = component.gameObject.AddComponent<RectTransform>();
             }
-            
+
             rt.localPosition = Vector3.zero;
             rt.localRotation = Quaternion.identity;
             rt.localScale = Vector3.one;
             return component;
         }
 
+        /// <summary>
+        /// Creates a RectTransform with a <see cref="LayoutElement"/> that can separate
+        /// adjacent elements in a layout group.
+        /// </summary>
+        /// <param name="parent">The parent transform.</param>
+        /// <param name="size">The size of the space to add.</param>
+        /// <returns>The spacer RectTransform.</returns>
         public static RectTransform AddSpacer(Transform parent, float size)
         {
-            RectTransform rect = Create(parent, "spacer");
-            LayoutElement layout = rect.gameObject.AddComponent<LayoutElement>();
+            var rect = Create(parent, "spacer");
+            var layout = rect.gameObject.AddComponent<LayoutElement>();
             layout.minHeight = size;
             layout.minWidth = size;
             return rect;
@@ -56,26 +79,26 @@ namespace Framework.UI
         public static List<Selectable> SetNavigationHorizontal(NavConfig config)
         {
             // get the selectable group
-            List<Selectable> selectables = GetSelectables(config);
+            var selectables = GetSelectables(config);
 
             if (selectables.Count == 0)
             {
                 return selectables;
             }
 
-            Selectable first = selectables[0];
-            Selectable last = selectables[selectables.Count - 1];
+            var first = selectables[0];
+            var last = selectables[selectables.Count - 1];
 
             // configure navigation in the group
-            Navigation tempNav = new Navigation
+            var tempNav = new Navigation
             {
                 selectOnUp = config.up,
                 selectOnDown = config.down,
             };
 
-            for (int i = 0; i < selectables.Count; i++)
+            for (var i = 0; i < selectables.Count; i++)
             {
-                Selectable current = selectables[i];
+                var current = selectables[i];
 
                 if (i == 0)
                 {
@@ -143,7 +166,7 @@ namespace Framework.UI
             }
             else if (config.wrap)
             {
-                Selectable wrap = FindLastSelectableInChain(last, selectables, MoveDirection.Right);
+                var wrap = FindLastSelectableInChain(last, selectables, MoveDirection.Right);
 
                 tempNav = wrap.navigation;
                 tempNav.selectOnRight = first;
@@ -158,7 +181,7 @@ namespace Framework.UI
             }
             else if (config.wrap)
             {
-                Selectable wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Left);
+                var wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Left);
 
                 tempNav = wrap.navigation;
                 tempNav.selectOnLeft = last;
@@ -176,26 +199,26 @@ namespace Framework.UI
         public static List<Selectable> SetNavigationVertical(NavConfig config)
         {
             // get the selectable group
-            List<Selectable> selectables = GetSelectables(config);
+            var selectables = GetSelectables(config);
 
             if (selectables.Count == 0)
             {
                 return selectables;
             }
 
-            Selectable first = selectables[0];
-            Selectable last = selectables[selectables.Count - 1];
+            var first = selectables[0];
+            var last = selectables[selectables.Count - 1];
 
             // configure navigation in the group
-            Navigation tempNav = new Navigation
+            var tempNav = new Navigation
             {
                 selectOnLeft = config.left,
                 selectOnRight = config.right,
             };
 
-            for (int i = 0; i < selectables.Count; i++)
+            for (var i = 0; i < selectables.Count; i++)
             {
-                Selectable current = selectables[i];
+                var current = selectables[i];
 
                 if (i == 0)
                 {
@@ -249,7 +272,7 @@ namespace Framework.UI
             }
             else if (config.wrap)
             {
-                Selectable wrap = FindLastSelectableInChain(last, selectables, MoveDirection.Down);
+                var wrap = FindLastSelectableInChain(last, selectables, MoveDirection.Down);
 
                 tempNav = wrap.navigation;
                 tempNav.selectOnDown = first;
@@ -264,7 +287,7 @@ namespace Framework.UI
             }
             else if (config.wrap)
             {
-                Selectable wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Up);
+                var wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Up);
 
                 tempNav = wrap.navigation;
                 tempNav.selectOnUp = last;
@@ -287,12 +310,12 @@ namespace Framework.UI
 
             return selectables;
         }
-        
+
         private static List<Selectable> GetSelectables(NavConfig config)
         {
-            List<Selectable> selectables = new List<Selectable>();
+            var selectables = new List<Selectable>();
 
-            for (int i = 0; i < config.parent.childCount; i++)
+            for (var i = 0; i < config.parent.childCount; i++)
             {
                 var selectable = config.parent.GetChild(i).GetComponent<Selectable>();
 
@@ -308,19 +331,20 @@ namespace Framework.UI
         private static readonly HashSet<Selectable> s_visited = new HashSet<Selectable>();
 
         /// <summary>
-        /// Follows a navigation chain to the last selectable. If there are cycles in the 
-        /// navigation graph, returns the first selectable which contains a link back to a 
-        /// selectable earlier in the chain.
-        /// first selectable which
+        /// Follows a navigation chain to the last selectable.
         /// </summary>
+        /// <remarks>
+        /// If there are cycles in the navigation graph, returns the first selectable which contains
+        /// a link back to a selectable earlier in the chain.
+        /// </remarks>
         /// <param name="selectable">The selectable to start from.</param>
         /// <param name="exclude">The selectables which are not to be included in the search.</param>
         /// <param name="dir">The direction to navigate along.</param>
-        /// <returns>The last selectable in the chian.</returns>
+        /// <returns>The last selectable in the chian, or null if <paramref name="selectable"/> is null.</returns>
         public static Selectable FindLastSelectableInChain(Selectable selectable, IEnumerable<Selectable> exclude, MoveDirection dir)
         {
             s_visited.Clear();
-            foreach (Selectable excluded in exclude)
+            foreach (var excluded in exclude)
             {
                 s_visited.Add(excluded);
             }
@@ -334,10 +358,10 @@ namespace Framework.UI
 
                 switch (dir)
                 {
-                    case MoveDirection.Up:      nextSelectable = selectable.navigation.selectOnUp;      break;
-                    case MoveDirection.Down:    nextSelectable = selectable.navigation.selectOnDown;    break;
-                    case MoveDirection.Left:    nextSelectable = selectable.navigation.selectOnLeft;    break;
-                    case MoveDirection.Right:   nextSelectable = selectable.navigation.selectOnRight;   break;
+                    case MoveDirection.Up: nextSelectable = selectable.navigation.selectOnUp; break;
+                    case MoveDirection.Down: nextSelectable = selectable.navigation.selectOnDown; break;
+                    case MoveDirection.Left: nextSelectable = selectable.navigation.selectOnLeft; break;
+                    case MoveDirection.Right: nextSelectable = selectable.navigation.selectOnRight; break;
                 }
 
                 // check if we found the end of the navigation chain
@@ -361,7 +385,7 @@ namespace Framework.UI
 
         /// <summary>
         /// Checks if moving from one rect transform to another does not
-        /// align with the given move direction.
+        /// align with a given move direction.
         /// </summary>
         /// <param name="from">The rect moved from.</param>
         /// <param name="to">The rect moved to.</param>
@@ -369,20 +393,20 @@ namespace Framework.UI
         /// <returns>True if the directions are opposite.</returns>
         public static bool Wraps(Component from, Component to, MoveDirection dir)
         {
-            RectTransform fRect = from.GetComponent<RectTransform>();
-            RectTransform tRect = to.GetComponent<RectTransform>();
+            var fRect = from.GetComponent<RectTransform>();
+            var tRect = to.GetComponent<RectTransform>();
 
-            Vector3 toRectCenterWorld = tRect.transform.TransformPoint(tRect.rect.center);
+            var toRectCenterWorld = tRect.transform.TransformPoint(tRect.rect.center);
             Vector2 toRectCenterLocal = fRect.InverseTransformPoint(toRectCenterWorld);
 
-            Vector2 delta = toRectCenterLocal - fRect.rect.center;
+            var delta = toRectCenterLocal - fRect.rect.center;
 
             switch (dir)
             {
-                case MoveDirection.Up:      return delta.y < 0f;
-                case MoveDirection.Down:    return delta.y > 0f;
-                case MoveDirection.Left:    return delta.x > 0f;
-                case MoveDirection.Right:   return delta.x < 0f;
+                case MoveDirection.Up: return delta.y < 0f;
+                case MoveDirection.Down: return delta.y > 0f;
+                case MoveDirection.Left: return delta.x > 0f;
+                case MoveDirection.Right: return delta.x < 0f;
             }
 
             return false;

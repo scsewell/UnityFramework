@@ -23,13 +23,13 @@ namespace Framework
     }
 
     /// <summary>
-    /// Implements singletom behavior for Unity MonoBehaviors.
+    /// Implements singletom behavior for <see cref="MonoBehaviour"/>.
     /// </summary>
     /// <typeparam name="T">The type of the subclass.</typeparam>
     public abstract class ComponentSingleton<T> : ComponentSingletonBase where T : ComponentSingleton<T>
     {
-        private static T m_instance;
-        
+        private static T m_instance = null;
+
         /// <summary>
         /// The singleton instance of this class.
         /// </summary>
@@ -40,7 +40,7 @@ namespace Framework
                 if (m_instance == null)
                 {
                     m_instance = FindObjectOfType<T>();
-                    
+
                     // Only create a new instance if not quitting so the instance
                     // reference will not persist when fast play mode is enabled.
                     if (m_instance == null && !IsQuitting)

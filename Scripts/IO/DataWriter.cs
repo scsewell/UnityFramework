@@ -1,7 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.IO;
 
 namespace Framework.IO
 {
@@ -64,7 +64,7 @@ namespace Framework.IO
         {
             IsFixedSize = false;
 
-            byte[] buffer = new byte[1024];
+            var buffer = new byte[1024];
             Prepare(buffer, GCHandle.Alloc(buffer, GCHandleType.Pinned), 0);
         }
 
@@ -100,13 +100,13 @@ namespace Framework.IO
             }
 
             // create a new buffer with enough space to fit the contents
-            int newSize = Math.Max(BytesWritten + requiredSize, 2 * m_buffer.Length);
+            var newSize = Math.Max(BytesWritten + requiredSize, 2 * m_buffer.Length);
 
-            byte[] newBuffer = new byte[newSize];
-            GCHandle newHandle = GCHandle.Alloc(newBuffer, GCHandleType.Pinned);
+            var newBuffer = new byte[newSize];
+            var newHandle = GCHandle.Alloc(newBuffer, GCHandleType.Pinned);
 
             // copy over the old buffer contents
-            int bytesWritten = BytesWritten;
+            var bytesWritten = BytesWritten;
             Buffer.MemoryCopy(m_bufStart.ToPointer(), newHandle.AddrOfPinnedObject().ToPointer(), bytesWritten, bytesWritten);
 
             // release the old buffer
@@ -121,8 +121,8 @@ namespace Framework.IO
         /// </summary>
         public unsafe byte[] GetBytes()
         {
-            byte[] buffer = new byte[BytesWritten];
-            GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            var buffer = new byte[BytesWritten];
+            var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
 
             try
             {
@@ -174,11 +174,11 @@ namespace Framework.IO
         /// <param name="array">The values to write.</param>
         public unsafe void Write<T>(T[] array) where T : unmanaged
         {
-            int length = UnsafeUtils.LengthInBytes(array);
+            var length = UnsafeUtils.LengthInBytes(array);
 
             if (length > 0)
             {
-                GCHandle handle = GCHandle.Alloc(array, GCHandleType.Pinned);
+                var handle = GCHandle.Alloc(array, GCHandleType.Pinned);
 
                 try
                 {
@@ -189,7 +189,7 @@ namespace Framework.IO
                     }
 
                     // start from where we last finished writting
-                    IntPtr src = handle.AddrOfPinnedObject();
+                    var src = handle.AddrOfPinnedObject();
 
                     // copy the memory using an optimal method
                     Buffer.MemoryCopy(src.ToPointer(), m_ptr.ToPointer(), BytesRemaining, length);
@@ -209,7 +209,7 @@ namespace Framework.IO
         /// <param name="value">The string to encode.</param>
         public void Write(string value)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(value);
+            var bytes = Encoding.UTF8.GetBytes(value);
             Write(bytes.Length);
             Write(bytes);
         }

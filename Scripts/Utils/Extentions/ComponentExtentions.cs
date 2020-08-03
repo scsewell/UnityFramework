@@ -2,6 +2,9 @@
 
 namespace Framework
 {
+    /// <summary>
+    /// A class containing <see cref="Component"/> extention methods.
+    /// </summary>
     public static class ComponentExtentions
     {
         public static T GetOrAddComponent<T>(this Component component) where T : Component

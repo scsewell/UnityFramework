@@ -13,7 +13,7 @@ namespace Framework.Settings
         private string m_enumType = null;
 
         [Serializable]
-        public class Mapping
+        private class Mapping
         {
             public string enumName;
             public string displayName;
@@ -28,7 +28,7 @@ namespace Framework.Settings
         /// <summary>
         /// The type of the underlying enum for this setting.
         /// </summary>
-        public Type Type
+        private Type Type
         {
             get
             {
@@ -46,6 +46,7 @@ namespace Framework.Settings
 
         private string[] m_displayValues = null;
 
+        /// <inheritdoc/>
         public override string[] DisplayValues
         {
             get
@@ -58,14 +59,16 @@ namespace Framework.Settings
             }
         }
 
-        public override void Initialize()
+        /// <inheritdoc/>
+        internal override void Initialize()
         {
             base.Initialize();
 
             m_displayValues = m_values.Select(m => m.displayName).ToArray();
         }
 
-        public override bool Deserialize(string serialized, out Enum value)
+        /// <inheritdoc/>
+        internal override bool Deserialize(string serialized, out Enum value)
         {
             value = default;
 
@@ -74,8 +77,8 @@ namespace Framework.Settings
                 return false;
             }
 
-            string enumName = null;
-            for (int i = 0; i < m_values.Length; i++)
+            var enumName = default(string);
+            for (var i = 0; i < m_values.Length; i++)
             {
                 if (m_values[i].displayName == serialized)
                 {
@@ -89,7 +92,7 @@ namespace Framework.Settings
                 return false;
             }
 
-            object parsed = Enum.Parse(Type, enumName, true);
+            var parsed = Enum.Parse(Type, enumName, true);
 
             if (!Enum.IsDefined(Type, parsed))
             {
@@ -100,11 +103,12 @@ namespace Framework.Settings
             return true;
         }
 
-        public override string Serialize(Enum value)
+        /// <inheritdoc/>
+        internal override string Serialize(Enum value)
         {
-            string enumName = value.ToString();
+            var enumName = value.ToString();
 
-            for (int i = 0; i < m_values.Length; i++)
+            for (var i = 0; i < m_values.Length; i++)
             {
                 if (m_values[i].enumName == enumName)
                 {
@@ -115,9 +119,10 @@ namespace Framework.Settings
             return null;
         }
 
-        public override bool Validate()
+        /// <inheritdoc/>
+        internal override bool Validate()
         {
-            bool valid = base.Validate();
+            var valid = base.Validate();
 
             if (Type == null)
             {
@@ -126,7 +131,7 @@ namespace Framework.Settings
             }
             else
             {
-                for (int i = 0; i < m_values.Length; i++)
+                for (var i = 0; i < m_values.Length; i++)
                 {
                     if (string.IsNullOrWhiteSpace(m_values[i].displayName))
                     {
@@ -158,5 +163,28 @@ namespace Framework.Settings
             }
             return (T)Value;
         }
+
+#if UNITY_EDITOR
+        /// <inheritdoc/>
+        internal override string OnInspectorGUI(Rect pos, string serializedValue)
+        {
+            if (Type != null)
+            {
+                var values = Enum.GetValues(Type);
+
+                Deserialize(serializedValue, out var deserialized);
+                var oldSelected = Mathf.Max(0, Array.IndexOf(values, deserialized));
+                var newSelected = Mathf.Max(0, UnityEditor.EditorGUI.Popup(pos, oldSelected, DisplayValues));
+                var selected = (Enum)values.GetValue(newSelected);
+
+                return Serialize(Sanitize(selected));
+            }
+            else
+            {
+                UnityEditor.EditorGUI.LabelField(pos, "Assign enum type");
+                return default;
+            }
+        }
+#endif
     }
 }

@@ -21,22 +21,22 @@ namespace Framework.Settings
         /// </summary>
         public Resolution MaxSupported => m_resolutions.Last();
 
-        /// <summary>
-        /// Are the permitted values for this setting determined at runtime.
-        /// </summary>
+        /// <inheritdoc/>
         public override bool IsRuntime => true;
 
+        /// <inheritdoc/>
         public override string[] DisplayValues => m_displayValues;
 
-        public override void Initialize()
+        /// <inheritdoc/>
+        internal override void Initialize()
         {
             // get all unique resolution sizes
-            List<Resolution> resolutions = new List<Resolution>();
-            HashSet<string> serialized = new HashSet<string>();
+            var resolutions = new List<Resolution>();
+            var serialized = new HashSet<string>();
 
-            foreach (Resolution res in Screen.resolutions)
+            foreach (var res in Screen.resolutions)
             {
-                string s = Serialize(res);
+                var s = Serialize(res);
 
                 if (!serialized.Contains(s))
                 {
@@ -55,15 +55,16 @@ namespace Framework.Settings
             base.Initialize();
         }
 
-        public override bool Deserialize(string serialized, out Resolution value)
+        /// <inheritdoc/>
+        internal override bool Deserialize(string serialized, out Resolution value)
         {
             value = new Resolution();
 
-            string[] split = serialized.Split('x');
+            var split = serialized.Split('x');
 
             if (split.Length == 2 &&
-                int.TryParse(split[0].Trim(), out int width) &&
-                int.TryParse(split[1].Trim(), out int height))
+                int.TryParse(split[0].Trim(), out var width) &&
+                int.TryParse(split[1].Trim(), out var height))
             {
                 value.width = width;
                 value.height = height;
@@ -73,7 +74,8 @@ namespace Framework.Settings
             return false;
         }
 
-        public override string Serialize(Resolution value)
+        /// <inheritdoc/>
+        internal override string Serialize(Resolution value)
         {
             return $"{value.width} x {value.height}";
         }

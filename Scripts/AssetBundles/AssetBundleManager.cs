@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.IO;
 
 using UnityEngine;
 
@@ -11,7 +11,7 @@ namespace Framework.AssetBundles
     using Object = UnityEngine.Object;
 
     /// <summary>
-    /// Responsible for managing asset bundles.
+    /// The class responsible for managing asset bundles.
     /// </summary>
     public static class AssetBundleManager
     {
@@ -34,7 +34,7 @@ namespace Framework.AssetBundles
                 }
             }
         }
-        
+
         /// <summary>
         /// The absolute path of the directory of override or additional asset bundles are located.
         /// This directory is automatically registered to the bundle manager with priority 100, ensuring
@@ -51,7 +51,7 @@ namespace Framework.AssetBundles
         private static bool m_autoUnloadBundles;
 
         /// <summary>
-        /// Will the bundle manager automatically decide when to check for unused bundles. 
+        /// Will the bundle manager automatically decide when to check for unused bundles.
         /// </summary>
         public static bool AutoUnloadBundles
         {
@@ -71,7 +71,7 @@ namespace Framework.AssetBundles
         }
 
         /// <summary>
-        /// The period in seconds for which the bundle manager will wait before checking for unused bundles. 
+        /// The time in seconds between checks for unused bundles.
         /// </summary>
         public static float AutoUnloadPeriod { get; set; }
 
@@ -108,7 +108,7 @@ namespace Framework.AssetBundles
             // close all asset bundles on quit
             Application.quitting += () =>
             {
-                foreach (BundleData bundle in m_loadedBundles)
+                foreach (var bundle in m_loadedBundles)
                 {
                     bundle.Dispose();
                 }
@@ -133,7 +133,7 @@ namespace Framework.AssetBundles
         public static void UnloadUnusedBundles()
         {
             // check which bundles are not needed
-            foreach (BundleData bundle in m_loadedBundles)
+            foreach (var bundle in m_loadedBundles)
             {
                 if (!bundle.IsUsed)
                 {
@@ -142,11 +142,11 @@ namespace Framework.AssetBundles
             }
 
             // unload the unused bundles
-            foreach (BundleData bundle in m_bundlesToRemove)
+            foreach (var bundle in m_bundlesToRemove)
             {
                 m_loadedBundles.Remove(bundle);
                 m_nameToBundle.Remove(bundle.bundleName);
-                
+
                 bundle.Dispose();
             }
 
@@ -176,7 +176,7 @@ namespace Framework.AssetBundles
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to register asset bundle directory \"{path}\"! {e.ToString()}");
+                Debug.LogError($"Failed to register asset bundle directory \"{path}\"! {e}");
                 return false;
             }
 
@@ -187,7 +187,7 @@ namespace Framework.AssetBundles
             }
 
             // register the directory and sort the directories by decending priority
-            BundleDirectory bundleDir = new BundleDirectory(directory.FullName, priority);
+            var bundleDir = new BundleDirectory(directory.FullName, priority);
 
             m_bundlesPaths.Add(bundleDir);
             m_bundlesPaths.Sort((x, y) => -x.priority.CompareTo(y.priority));
@@ -202,7 +202,7 @@ namespace Framework.AssetBundles
         /// <typeparam name="T">The type of asset to load from the bundles.</typeparam>
         /// <param name="bundleDir">The path to the directory to load bundles from relative to the registered bundle directories.</param>
         /// <param name="assetName">The name of the asset to load from the bundle.</param>
-        /// <returns>The loaded assets.</returns>
+        /// <returns>A new array contaning the loaded assets, or an empty array if the bundled assets could not be found.</returns>
         public static async Task<T[]> LoadAssetsAsync<T>(string bundleDir, string assetName) where T : Object
         {
             // loading should only be done by the main thread
@@ -212,13 +212,13 @@ namespace Framework.AssetBundles
             }
 
             // find the available bundles
-            List<string> bundles = new List<string>();
+            var bundles = new List<string>();
 
-            foreach (BundleDirectory directory in m_bundlesPaths)
+            foreach (var directory in m_bundlesPaths)
             {
-                if (GetBundleDirectory(Path.Combine(directory.path, bundleDir), out DirectoryInfo dirInfo))
+                if (GetBundleDirectory(Path.Combine(directory.path, bundleDir), out var dirInfo))
                 {
-                    foreach (FileInfo file in dirInfo.EnumerateFiles())
+                    foreach (var file in dirInfo.EnumerateFiles())
                     {
                         // asset bundle files should have no extention
                         if (string.IsNullOrEmpty(file.Extension))
@@ -238,9 +238,9 @@ namespace Framework.AssetBundles
             }
 
             // start loading the asset bundles
-            List<Task<T>> assetLoadOps = new List<Task<T>>();
+            var assetLoadOps = new List<Task<T>>();
 
-            foreach (string bundle in bundles)
+            foreach (var bundle in bundles)
             {
                 assetLoadOps.Add(LoadAssetAsync<T>(bundle, assetName));
             }
@@ -257,7 +257,7 @@ namespace Framework.AssetBundles
         /// <typeparam name="T">The type of asset to load from the bundle.</typeparam>
         /// <param name="bundleName">The full name of the asset bundle to load the asset from.</param>
         /// <param name="assetName">The name of the asset to load from the bundle.</param>
-        /// <returns>The loaded asset.</returns>
+        /// <returns>The loaded asset, or null if the bundled asset could not be found.</returns>
         public static async Task<T> LoadAssetAsync<T>(string bundleName, string assetName) where T : Object
         {
             // loading should only be done by the main thread
@@ -267,7 +267,7 @@ namespace Framework.AssetBundles
             }
 
             // load the bundle
-            BundleData bundle = LoadBundle(bundleName);
+            var bundle = LoadBundle(bundleName);
 
             // get the asset from the bundle
             if (bundle != null)
@@ -292,7 +292,7 @@ namespace Framework.AssetBundles
             }
 
             // load the bundle
-            BundleData bundle = LoadBundle(bundleName);
+            var bundle = LoadBundle(bundleName);
 
             // get the scene in the bundle
             if (bundle != null)
@@ -311,7 +311,7 @@ namespace Framework.AssetBundles
         private static BundleData LoadBundle(string bundleName)
         {
             // check if this bundle is already loaded
-            if (m_nameToBundle.TryGetValue(bundleName, out BundleData bundleData))
+            if (m_nameToBundle.TryGetValue(bundleName, out var bundleData))
             {
                 return bundleData;
             }
@@ -319,7 +319,7 @@ namespace Framework.AssetBundles
             // find the first bundle with a matching name
             FileInfo file = null;
 
-            foreach (BundleDirectory directory in m_bundlesPaths)
+            foreach (var directory in m_bundlesPaths)
             {
                 if (GetBundleFile(Path.Combine(directory.path, bundleName), out file))
                 {

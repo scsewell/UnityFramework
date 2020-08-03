@@ -4,7 +4,7 @@ using UnityEngine.Audio;
 namespace Framework.Audio
 {
     /// <summary>
-    /// Manages playing music tracks.
+    /// A class that manages playing <see cref="Music"/> tracks.
     /// </summary>
     public class MusicPlayer : Disposable
     {
@@ -27,7 +27,7 @@ namespace Framework.Audio
             set
             {
                 EnsureNotDisposed();
-                float volume = Mathf.Clamp01(value);
+                var volume = Mathf.Clamp01(value);
                 if (m_volume != volume)
                 {
                     m_volume = volume;
@@ -40,7 +40,7 @@ namespace Framework.Audio
         private bool m_pausable = true;
 
         /// <summary>
-        /// Will the music pause while the audio listener is paused.
+        /// Does the music pause while the audio listener is paused.
         /// </summary>
         public bool Pausable
         {
@@ -71,9 +71,9 @@ namespace Framework.Audio
         {
             m_go = gameObject;
 
-            for (int i = 0; i < m_sources.Length; i++)
+            for (var i = 0; i < m_sources.Length; i++)
             {
-                AudioSource source = m_go.AddComponent<AudioSource>();
+                var source = m_go.AddComponent<AudioSource>();
                 source.playOnAwake = false;
                 source.spatialBlend = 0f;
                 m_sources[i] = source;
@@ -84,9 +84,12 @@ namespace Framework.Audio
 
         protected override void OnDispose(bool disposing)
         {
-            for (int i = 0; i < m_sources.Length; i++)
+            if (disposing)
             {
-                Object.Destroy(m_sources[i]);
+                for (var i = 0; i < m_sources.Length; i++)
+                {
+                    Object.Destroy(m_sources[i]);
+                }
             }
         }
 
@@ -99,7 +102,7 @@ namespace Framework.Audio
 
             if (IsPlaying && m_currentTrack != null && m_currentTrack.CanLoop)
             {
-                double nextLoopTime = m_lastLoopTime + m_currentTrack.LoopTime;
+                var nextLoopTime = m_lastLoopTime + m_currentTrack.LoopTime;
 
                 // if near the end of the current loop start the next one
                 if (nextLoopTime - AudioSettings.dspTime < 0.1)
@@ -113,7 +116,7 @@ namespace Framework.Audio
         /// Plays a music track.
         /// </summary>
         /// <param name="music">The music to play.</param>
-        /// <param name="mixer">The mixer to play the music on.</param>
+        /// <param name="mixer">The mixer channel to play the music on.</param>
         public void Play(Music music, AudioMixerGroup mixer = null)
         {
             Stop();
@@ -168,8 +171,8 @@ namespace Framework.Audio
 
         private void PlayScheduled(double time)
         {
-            int source = (m_lastMusicSource + 1) % m_sources.Length;
-            AudioSource music = m_sources[source];
+            var source = (m_lastMusicSource + 1) % m_sources.Length;
+            var music = m_sources[source];
 
             music.clip = m_currentTrack.Track;
             music.outputAudioMixerGroup = m_mixer;

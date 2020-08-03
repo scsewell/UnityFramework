@@ -14,7 +14,7 @@ namespace Framework.AssetBundles
     /// If the asset is in a bundle, the bundle will be loaded on demand.
     /// </summary>
     /// <typeparam name="T">The type of object to reference.</typeparam>
-    public abstract class AssetBundleObjectReference<T> : AssetBundleReference where T : UnityEngine.Object
+    public abstract class AssetBundleObjectReference<T> : AssetBundleReference where T : Object
     {
         [SerializeField]
         private string m_assetName = null;
@@ -29,7 +29,7 @@ namespace Framework.AssetBundles
         /// <returns>False if no asset with the given GUID exists.</returns>
         public override bool UpdateBundlePath()
         {
-            string assetPath = AssetDatabase.GUIDToAssetPath(m_assetGuid);
+            var assetPath = AssetDatabase.GUIDToAssetPath(m_assetGuid);
 
             // Clear the references if the Guid is invalid
             if (string.IsNullOrEmpty(assetPath))
@@ -43,14 +43,14 @@ namespace Framework.AssetBundles
             // Check if the asset in in an asset bundle. If in a bundle, store
             // the path to the asset. Otherwise, store the asset reference as 
             // usual.
-            AssetImporter importer = AssetImporter.GetAtPath(assetPath);
+            var importer = AssetImporter.GetAtPath(assetPath);
 
             if (importer == null)
             {
                 return false;
             }
 
-            bool isInBundle = !string.IsNullOrEmpty(importer.assetBundleName);
+            var isInBundle = !string.IsNullOrEmpty(importer.assetBundleName);
 
             if (isInBundle)
             {
@@ -72,8 +72,17 @@ namespace Framework.AssetBundles
         /// <summary>
         /// Gets the referenced asset.
         /// </summary>
+        /// <remarks>
+        /// This will complete synchronously if the asset does not reside in an asset bundle.
+        /// Avoid calling this method more than needed, as it does not cache the asset reference.
+        /// </remarks>
         public async Task<T> GetAsync()
         {
+            if (string.IsNullOrEmpty(m_bundleName))
+            {
+                return m_asset;
+            }
+
             // We do not cache the reference to as that will prevent the managed 
             // asset object from being garbage collected, which the bundle manager
             // needs to detect when it is safe to unload the bundle.

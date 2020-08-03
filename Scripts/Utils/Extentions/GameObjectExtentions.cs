@@ -2,22 +2,19 @@
 
 namespace Framework
 {
+    /// <summary>
+    /// A class containing <see cref="GameObject"/> extention methods.
+    /// </summary>
     public static class GameObjectExtentions
     {
         public static T GetOrAddComponent<T>(this GameObject go) where T : Component
         {
-            T c = go.GetComponent<T>();
-            if (c != null)
-            {
-                return c;
-            }
-            return go.AddComponent<T>();
+            return go.TryGetComponent<T>(out var c) ? c : go.AddComponent<T>();
         }
 
         public static T GetComponentInParentAny<T>(this GameObject go) where T : Component
         {
-            T c = go.GetComponent<T>();
-            if (c != null)
+            if (go.TryGetComponent<T>(out var c))
             {
                 return c;
             }

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+
 using UnityEngine;
 
 namespace Framework
@@ -7,7 +8,7 @@ namespace Framework
     {
         public static IEnumerator Wait(float delay)
         {
-            float completeTime = Time.time + delay;
+            var completeTime = Time.time + delay;
             while (Time.time < completeTime)
             {
                 yield return null;

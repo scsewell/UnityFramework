@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 
-using UnityEngine;
 using UnityEditor;
 
 namespace Framework.Settings
 {
     [CanEditMultipleObjects]
     [CustomEditor(typeof(SettingPresetGroup))]
-    public class SettingPresetGroupEditor : Editor
+    internal class SettingPresetGroupEditor : Editor
     {
         protected SerializedProperty m_presets = null;
 
@@ -23,20 +22,16 @@ namespace Framework.Settings
             EditorGUILayout.PropertyField(m_presets);
 
             // determine which settings are not valid for a preset
-            List<Setting> runtimeSetings = new List<Setting>();
+            var runtimeSetings = new List<Setting>();
 
-            SerializedProperty list = m_presets.FindPropertyRelative("array");
-            for (int i = 0; i < list.arraySize; i++)
+            for (var i = 0; i < m_presets.arraySize; i++)
             {
-                SerializedProperty item = list.GetArrayElementAtIndex(i);
-                SerializedProperty settingProp = item.FindPropertyRelative("m_setting");
+                var item = m_presets.GetArrayElementAtIndex(i);
+                var settingProp = item.FindPropertyRelative("m_setting");
 
-                if (settingProp.objectReferenceValue is Setting setting)
+                if (settingProp.objectReferenceValue is Setting setting && setting.IsRuntime)
                 {
-                    if (setting.IsRuntime)
-                    {
-                        runtimeSetings.Add(setting);
-                    }
+                    runtimeSetings.Add(setting);
                 }
             }
 
@@ -45,7 +40,7 @@ namespace Framework.Settings
             // display a message box with all the invalid settings
             if (runtimeSetings.Count > 0)
             {
-                foreach (Setting setting in runtimeSetings)
+                foreach (var setting in runtimeSetings)
                 {
                     EditorGUILayout.HelpBox($"Runtime setting \"{setting.name}\" cannot have a preset value!", MessageType.Error);
                 }

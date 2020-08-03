@@ -8,23 +8,23 @@ namespace Framework.Settings
     /// <summary>
     /// Manages converting settings to and from json.
     /// </summary>
-    public static class SettingSerializer
+    internal static class SettingSerializer
     {
         [Serializable]
-        private struct SerializedSettings
+        private struct Settings
         {
-            public List<SerializedCategory> categories;
+            public List<Category> categories;
         }
 
         [Serializable]
-        private struct SerializedCategory
+        private struct Category
         {
             public string name;
-            public List<SerializedSetting> settings;
+            public List<Value> settings;
         }
 
         [Serializable]
-        private struct SerializedSetting
+        private struct Value
         {
             public string name;
             public string value;
@@ -37,14 +37,14 @@ namespace Framework.Settings
         /// <param name="settings">The settings to apply the deserialized values to.</param>
         public static void FromJson(string json, IEnumerable<Setting> settings)
         {
-            SerializedSettings deserialized = JsonUtility.FromJson<SerializedSettings>(json);
+            var deserialized = JsonUtility.FromJson<Settings>(json);
 
-            foreach (SerializedCategory category in deserialized.categories)
+            foreach (var category in deserialized.categories)
             {
-                foreach (SerializedSetting setting in category.settings)
+                foreach (var setting in category.settings)
                 {
                     // if there is a setting matching the serialized one apply its value
-                    foreach (Setting s in settings)
+                    foreach (var s in settings)
                     {
                         if (s.name == setting.name && s.Category.name == category.name)
                         {
@@ -63,33 +63,34 @@ namespace Framework.Settings
         /// <returns>The serialized settings.</returns>
         public static string ToJson(Dictionary<SettingCategory, List<Setting>> categoryToSettings)
         {
-            // get a json representation of the settings
-            SerializedSettings serializedSettings = new SerializedSettings()
+            var settings = new Settings
             {
-                categories = new List<SerializedCategory>(categoryToSettings.Count),
+                categories = new List<Category>(categoryToSettings.Count),
             };
 
             foreach (var pair in categoryToSettings)
             {
-                SerializedCategory serializedCategory = new SerializedCategory()
+                var category = new Category
                 {
                     name = pair.Key.name,
-                    settings = new List<SerializedSetting>(pair.Value.Count),
+                    settings = new List<Value>(pair.Value.Count),
                 };
 
-                foreach (Setting setting in pair.Value)
+                foreach (var setting in pair.Value)
                 {
-                    serializedCategory.settings.Add(new SerializedSetting()
+                    var value = new Value
                     {
                         name = setting.name,
                         value = setting.SerializedValue,
-                    });
+                    };
+
+                    category.settings.Add(value);
                 }
 
-                serializedSettings.categories.Add(serializedCategory);
+                settings.categories.Add(category);
             }
 
-            return JsonUtility.ToJson(serializedSettings, true);
+            return JsonUtility.ToJson(settings, true);
         }
     }
 }

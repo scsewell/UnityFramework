@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Threading;
 using System.Runtime.CompilerServices;
+using System.Threading;
+
 using UnityEngine;
 
 namespace Framework
@@ -51,7 +52,7 @@ namespace Framework
         /// <summary>
         /// Checks if the caller is the main thread.
         /// </summary>
-        /// <returns>True if on the main thread.</returns>
+        /// <returns>True if on the main thread, false otherwise.</returns>
         public static bool EnsureMainThread([CallerMemberName] string callerName = "")
         {
             if (Thread.CurrentThread.ManagedThreadId != UnityThreadId)

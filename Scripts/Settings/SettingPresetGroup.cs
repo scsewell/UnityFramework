@@ -1,31 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using UnityEngine;
 
 namespace Framework.Settings
 {
     /// <summary>
-    /// A set of values which can be applied to settings.
+    /// A set of predefined values which can be applied to a grouup of settings.
     /// </summary>
     [CreateAssetMenu(fileName = "New Preset", menuName = "Framework/Settings/Preset", order = 51)]
     public class SettingPresetGroup : ScriptableObject
     {
-        [Serializable]
-        public class PresetList : ReorderableArray<SettingPreset>
-        {
-        }
-
         [SerializeField]
-        [Reorderable(singleLine = true)]
-        private PresetList m_presets = null;
+        private List<SettingPreset> m_presets = null;
 
         /// <summary>
         /// Checks if all the settings are using the values in this preset.
         /// </summary>
         public bool IsApplied()
         {
-            foreach (SettingPreset preset in m_presets)
+            foreach (var preset in m_presets)
             {
                 if (!preset.IsApplied)
                 {
@@ -42,7 +35,7 @@ namespace Framework.Settings
         {
             Debug.Log($"Applying setting preset \"{name}\"");
 
-            foreach (SettingPreset preset in m_presets)
+            foreach (var preset in m_presets)
             {
                 preset.Apply();
             }
@@ -51,11 +44,11 @@ namespace Framework.Settings
         private void OnValidate()
         {
             // Prevent one preset from having multiple values for one setting
-            HashSet<Setting> settings = new HashSet<Setting>();
+            var settings = new HashSet<Setting>();
 
-            for (int i = 0; i < m_presets.Length; i++)
+            for (var i = 0; i < m_presets.Count; i++)
             {
-                Setting setting = m_presets[i].Setting;
+                var setting = m_presets[i].Setting;
 
                 if (setting != null && settings.Contains(setting))
                 {

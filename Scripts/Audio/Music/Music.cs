@@ -3,13 +3,18 @@
 namespace Framework.Audio
 {
     /// <summary>
-    /// Stores a reference to a music track and manages metadata.
+    /// An asset that stores a reference to a music track and manages metadata.
     /// </summary>
     [CreateAssetMenu(fileName = "New Music", menuName = "Framework/Audio/Music", order = 3)]
     public class Music : ScriptableObject
     {
         [SerializeField]
+        [Tooltip("The music track.")]
         private AudioClip m_track = null;
+
+        /// <summary>
+        /// The music track.
+        /// </summary>
         public AudioClip Track => m_track;
 
         [SerializeField]
@@ -30,6 +35,9 @@ namespace Framework.Audio
         /// </summary>
         public string Artist => m_artist;
 
+        /// <summary>
+        /// The behaviours of a music track when it is finished playing.
+        /// </summary>
         public enum LoopMode
         {
             /// <summary>
@@ -66,7 +74,7 @@ namespace Framework.Audio
         private double m_seconds = 0.0;
 
         /// <summary>
-        /// The time at which the audio loops.
+        /// The time in seconds at which the audio loops.
         /// </summary>
         public double LoopTime
         {

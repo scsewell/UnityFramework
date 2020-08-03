@@ -4,6 +4,12 @@ using UnityEngine;
 
 namespace Framework
 {
+    /// <summary>
+    /// A struct that stores the spacial state of a transfom.
+    /// </summary>
+    /// <remarks>
+    /// This data can either represent the local or global space transform.
+    /// </remarks>
     [Serializable]
     public struct TransformData
     {
@@ -41,7 +47,7 @@ namespace Framework
 
         public void ApplyTo(Transform target)
         {
-            Transform parent = target.parent;
+            var parent = target.parent;
 
             if (m_space == Space.Self || parent == null)
             {
@@ -54,7 +60,7 @@ namespace Framework
                 target.position = position;
                 target.rotation = rotation;
 
-                Vector3 parentScale = parent.lossyScale;
+                var parentScale = parent.lossyScale;
                 target.localScale = new Vector3(
                     scale.x / parentScale.x,
                     scale.y / parentScale.y,
@@ -98,18 +104,14 @@ namespace Framework
 
         public override bool Equals(object obj)
         {
-            if (obj is TransformData other)
-            {
-                return Equals(other);
-            }
-            return false;
+            return obj is TransformData other ? Equals(other) : false;
         }
 
         public bool Equals(TransformData other)
         {
-            return 
+            return
                 position == other.position &&
-                rotation == other.rotation && 
+                rotation == other.rotation &&
                 scale == other.scale &&
                 m_space == other.m_space;
         }
@@ -119,7 +121,7 @@ namespace Framework
             return $"space:{m_space} pos:{position} rot:{rotation} scale:{scale}";
         }
 
-        public static bool operator == (TransformData a, TransformData b) => a.Equals(b);
-        public static bool operator != (TransformData a, TransformData b) => !a.Equals(b);
+        public static bool operator ==(TransformData a, TransformData b) => a.Equals(b);
+        public static bool operator !=(TransformData a, TransformData b) => !a.Equals(b);
     }
 }

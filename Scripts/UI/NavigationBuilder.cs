@@ -1,15 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Framework.UI
 {
+    /// <summary>
+    /// A class that manages the navigation for a set of related <see cref="Selectables"/>
+    /// that can be navigated between.
+    /// </summary>
     public abstract class NavigationBuilder : MonoBehaviour
     {
         [SerializeField]
-        [Tooltip("Allow navigation between the first and last selectable. If this config uses the up/down/left/right selectables, we follow along their navigation chain in the relevant direction and wrap to the last avaiable element.")]
+        [Tooltip("Allow navigation between the first and last selectable. " +
+            "If this config uses the up/down/left/right selectables, we follow along their navigation chain in the relevant direction and wrap to the last avaiable element.")]
         protected bool m_wrap = true;
 
         [SerializeField]
@@ -31,11 +35,15 @@ namespace Framework.UI
         public List<Selectable> Selectables { get; private set; } = null;
 
 
-        private void Start()
+        protected virtual void Start()
         {
             Selectables = BuildNavigation();
         }
 
+        /// <summary>
+        /// Builds the navigation for the group of selectables to manage.
+        /// </summary>
+        /// <returns>The selectables in the navigation chain.</returns>
         protected abstract List<Selectable> BuildNavigation();
     }
 }
