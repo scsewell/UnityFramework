@@ -2,6 +2,9 @@
 
 namespace Framework
 {
+    /// <summary>
+    /// Utilities for doing common string operations.
+    /// </summary>
     public static class StringUtils
     {
         /// <summary>

@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace Framework
 {
+    /// <summary>
+    /// Utilities for managing coroutines.
+    /// </summary>
     public static class CoroutineUtils
     {
         public static IEnumerator Wait(float delay)

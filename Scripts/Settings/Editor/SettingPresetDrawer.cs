@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Framework.Settings
 {
     [CustomPropertyDrawer(typeof(SettingPreset))]
-    internal class SettingPresetEditor : PropertyDrawer
+    internal class SettingPresetDrawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {

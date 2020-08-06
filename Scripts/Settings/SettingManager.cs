@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using UnityEngine;
 
@@ -76,23 +77,22 @@ namespace Framework.Settings
         private void Initialize()
         {
             // build the grouping of setting by category
-            m_categories = new List<SettingCategory>();
             m_categoryToSettings = new Dictionary<SettingCategory, List<Setting>>();
 
-            for (var i = 0; i < m_settings.Count; i++)
+            foreach (var setting in m_settings)
             {
-                var category = m_settings[i].Category;
+                var category = setting.Category;
 
                 if (!m_categoryToSettings.TryGetValue(category, out var settings))
                 {
-                    m_categories.Add(category);
-
                     settings = new List<Setting>();
                     m_categoryToSettings.Add(category, settings);
                 }
 
-                settings.Add(m_settings[i]);
+                settings.Add(setting);
             }
+
+            m_categories = m_categoryToSettings.Keys.OrderBy(c => c.SortOrder).ToList();
 
             // prepare all the settings
             foreach (var setting in m_settings)

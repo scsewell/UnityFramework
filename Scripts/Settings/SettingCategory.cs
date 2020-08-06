@@ -16,5 +16,16 @@ namespace Framework.Settings
         /// The icon used to represent this category in the game UI.
         /// </summary>
         public Sprite Icon => m_icon;
+
+        [SerializeField]
+        [Tooltip("The sorting order of the category in the category list. " +
+            "Categories with lesser sorting orders are first.")]
+        private int m_sortOrder = 100;
+
+        /// <summary>
+        /// The sorting order of the category in the category list. Categories with
+        /// lesser sorting orders are first.
+        /// </summary>
+        public int SortOrder => m_sortOrder;
     }
 }
