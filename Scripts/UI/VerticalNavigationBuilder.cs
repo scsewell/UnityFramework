@@ -16,18 +16,18 @@ namespace Framework.UI
         private Selectable m_horizontalSelect = null;
 
         /// <inheritdoc/>
-        protected override List<Selectable> BuildNavigation()
+        protected override List<Selectable> OnBuildNavigation()
         {
             return UIHelper.SetNavigationVertical(new NavConfig()
             {
                 parent = transform,
-                allowDisabled = false,
                 up = m_up,
                 down = m_down,
                 left = m_left,
                 right = m_right,
-                horizontalSelect = m_horizontalSelect,
+                defaultSelectable = m_horizontalSelect,
                 wrap = m_wrap,
+                allowDisabled = m_allowDisabled,
             });
         }
     }

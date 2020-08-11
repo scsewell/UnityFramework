@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 using UnityEngine;
 
@@ -11,9 +10,9 @@ namespace Framework.IO
     public abstract class SerializableData
     {
         /// <summary>
-        /// The header used to identify the type of data represented by the serialized contents.
+        /// The code used to identify this type of serialized data.
         /// </summary>
-        protected abstract char[] SerializerType { get; }
+        protected abstract FourCC SerializerType { get; }
 
         /// <summary>
         /// The current version number of the serializer.
@@ -35,7 +34,7 @@ namespace Framework.IO
             try
             {
                 // write the serializer version
-                writer.Write(SerializerType.Select(c => (byte)c).ToArray());
+                writer.Write(SerializerType);
                 writer.Write(SerializerVersion);
 
                 // write the contents
@@ -65,11 +64,11 @@ namespace Framework.IO
             try
             {
                 // ensure that upcoming bytes are serialized data of this type
-                var type = reader.Read<byte>(SerializerType.Length);
+                var type = reader.Read<FourCC>();
 
-                if (!SerializerType.Select(c => (byte)c).SequenceEqual(type))
+                if (SerializerType != type)
                 {
-                    throw new Exception($"Serialized data is not a {GetType().Name}!");
+                    throw new Exception($"Serialized data is {type} but the deserializer is expecting {SerializerType} ({GetType().Name})!");
                 }
 
                 // get the serialized format version

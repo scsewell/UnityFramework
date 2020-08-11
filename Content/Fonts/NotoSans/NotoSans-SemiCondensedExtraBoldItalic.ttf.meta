@@ -1,0 +1,72 @@
+fileFormatVersion: 2
+guid: 7b6dbc8640e832740905813620074acd
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Noto Sans
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 682ea7b0eb39a1a46a3b52cae84fd269, type: 3}
+  - {fileID: 12800000, guid: 97dd118456acfdf4499694d8352fb468, type: 3}
+  - {fileID: 12800000, guid: b9884ee31ca9ae2449df758167462796, type: 3}
+  - {fileID: 12800000, guid: 4a57c0c4aa8601e49a98efc80cf17d1c, type: 3}
+  - {fileID: 12800000, guid: 31d10c095a8d32743925861b7bb3ebfa, type: 3}
+  - {fileID: 12800000, guid: 65e48313680344747bce3894fa022696, type: 3}
+  - {fileID: 12800000, guid: 88593c2590ef488488417203bef6a164, type: 3}
+  - {fileID: 12800000, guid: 62bcb6e2cc4ae754fbfa2cf68b5ae70d, type: 3}
+  - {fileID: 12800000, guid: 36765baee0fbcbb40b4f64b3716b32e6, type: 3}
+  - {fileID: 12800000, guid: 6a7fce992017eba438677a6e06198781, type: 3}
+  - {fileID: 12800000, guid: c0ea563e006434b45925d54376a82db4, type: 3}
+  - {fileID: 12800000, guid: f75cf243186fb4749bc050c1f039f92b, type: 3}
+  - {fileID: 12800000, guid: 72878d123fa259a41a75966a59b33d9b, type: 3}
+  - {fileID: 12800000, guid: 1327001a5d5a14e4f96e8e28866aa378, type: 3}
+  - {fileID: 12800000, guid: 3706e4dece432164ea168aef8b7a92f5, type: 3}
+  - {fileID: 12800000, guid: 980a3ac3b52ae2d44a37e12a988931a3, type: 3}
+  - {fileID: 12800000, guid: 868c0df2704cb4f4481b0d620855b573, type: 3}
+  - {fileID: 12800000, guid: 25b2929181a1748429d3688bb650aa6e, type: 3}
+  - {fileID: 12800000, guid: d98392c33bdcc514d8e133f09242df64, type: 3}
+  - {fileID: 12800000, guid: 63c7af13386f6f049a809f36a1372a36, type: 3}
+  - {fileID: 12800000, guid: 311b7c780dfc0334db7f499ff36e2aa8, type: 3}
+  - {fileID: 12800000, guid: c31ba5d0a8100d04eadf9f209c9fbe9d, type: 3}
+  - {fileID: 12800000, guid: 952acd4a3146b0747b876f45de76a03d, type: 3}
+  - {fileID: 12800000, guid: d713e672cc7d42945ba0269705aad8ca, type: 3}
+  - {fileID: 12800000, guid: 29eeef62d36591640a93adf17aa73a7d, type: 3}
+  - {fileID: 12800000, guid: d78b9804a020c684d825cf9f7a60a5d6, type: 3}
+  - {fileID: 12800000, guid: 6b91205a8ad6f8642b3e76bb3e103614, type: 3}
+  - {fileID: 12800000, guid: 14b5547bd384de7428d2a6fab451f364, type: 3}
+  - {fileID: 12800000, guid: e2b045f987c6cc747aab38047ca88ce1, type: 3}
+  - {fileID: 12800000, guid: 835ba0de8db08214ca78e1d97395a943, type: 3}
+  - {fileID: 12800000, guid: 37a0f8185fe945f4a974aa5a7eb2d8fc, type: 3}
+  - {fileID: 12800000, guid: 221b783b0591d2142b6524c17340bef3, type: 3}
+  - {fileID: 12800000, guid: d63f829dcbd3a61478b2e47a80e5286d, type: 3}
+  - {fileID: 12800000, guid: a247e3297b86bad4da0aed5afc89b903, type: 3}
+  - {fileID: 12800000, guid: eafc6b056d91baf4494ce59f275b223e, type: 3}
+  - {fileID: 12800000, guid: 176764e06db7d784aa687f01a85753d0, type: 3}
+  - {fileID: 12800000, guid: aa00207361f530d43bdb2eb85da0fa84, type: 3}
+  - {fileID: 12800000, guid: 72408d70b4cf6d3439a7d642a483c4cb, type: 3}
+  - {fileID: 12800000, guid: 64b5100855386a14cb093553eb40f644, type: 3}
+  - {fileID: 12800000, guid: 928a9204537efd240a4bf7298fca428b, type: 3}
+  - {fileID: 12800000, guid: 2a706c73223bf2f4597d9e22909e4aa5, type: 3}
+  - {fileID: 12800000, guid: 1aa145b81bbbe1840a14dfe99662a02e, type: 3}
+  - {fileID: 12800000, guid: 5729dd0a0b84d884492d30df1eea72c9, type: 3}
+  - {fileID: 12800000, guid: bafc2db438b67824b8355915dcd314d6, type: 3}
+  - {fileID: 12800000, guid: a499848e125bcc1439dd7915c494bf4a, type: 3}
+  - {fileID: 12800000, guid: 00bbdb33789a2be41a1ebff477459d22, type: 3}
+  - {fileID: 12800000, guid: 80fd59dfd54ab7944b6598cabf51a15a, type: 3}
+  - {fileID: 12800000, guid: e6720717d9e522042a2d8f4d8793e289, type: 3}
+  - {fileID: 12800000, guid: 502fcb7755b0e9b47823b89d5f0c1a92, type: 3}
+  - {fileID: 12800000, guid: 473ca4c68212c67449482a00b58f2340, type: 3}
+  - {fileID: 12800000, guid: 9250fc55a8ea32f4d8b1b0d7605e0f49, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

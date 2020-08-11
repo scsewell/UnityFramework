@@ -31,7 +31,7 @@ namespace Framework.IO
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to get files in directory \"{directory}\"! {e.ToString()}");
+                Debug.LogError($"Failed to get files in directory \"{directory}\"! {e}");
                 return new FileInfo[0];
             }
         }
@@ -58,7 +58,7 @@ namespace Framework.IO
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to write to \"{path}\"! {e.ToString()}");
+                Debug.LogError($"Failed to write to \"{path}\"! {e}");
                 return false;
             }
         }
@@ -85,7 +85,7 @@ namespace Framework.IO
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to write to \"{path}\"! {e.ToString()}");
+                Debug.LogError($"Failed to write to \"{path}\"! {e}");
                 return false;
             }
         }
@@ -113,7 +113,7 @@ namespace Framework.IO
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to read from \"{path}\"! {e.ToString()}");
+                Debug.LogError($"Failed to read from \"{path}\"! {e}");
 
                 contents = null;
                 return false;
@@ -143,7 +143,7 @@ namespace Framework.IO
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to read from \"{path}\"! {e.ToString()}");
+                Debug.LogError($"Failed to read from \"{path}\"! {e}");
 
                 contents = null;
                 return false;
@@ -173,9 +173,28 @@ namespace Framework.IO
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to open file stream at \"{path}\"! {e.ToString()}");
+                Debug.LogError($"Failed to open file stream at \"{path}\"! {e}");
 
                 stream = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Deletes a file.
+        /// </summary>
+        /// <param name="path">The full name of the file to delete.</param>
+        /// <returns>True if the file was deleted or does not exist, false if an exception occurs.</returns>
+        public static bool DeleteFile(string path)
+        {
+            try
+            {
+                File.Delete(path);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to delete file \"{path}\"! {e}");
                 return false;
             }
         }

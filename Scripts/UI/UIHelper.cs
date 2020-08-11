@@ -147,14 +147,14 @@ namespace Framework.UI
             if (config.up != null)
             {
                 tempNav = config.up.navigation;
-                tempNav.selectOnDown = config.verticalSelect != null ? config.verticalSelect : first;
+                tempNav.selectOnDown = config.defaultSelectable != null ? config.defaultSelectable : first;
                 config.up.navigation = tempNav;
             }
 
             if (config.down != null)
             {
                 tempNav = config.down.navigation;
-                tempNav.selectOnUp = config.verticalSelect != null ? config.verticalSelect : first;
+                tempNav.selectOnUp = config.defaultSelectable != null ? config.defaultSelectable : first;
                 config.down.navigation = tempNav;
             }
 
@@ -297,14 +297,14 @@ namespace Framework.UI
             if (config.left != null)
             {
                 tempNav = config.left.navigation;
-                tempNav.selectOnRight = config.horizontalSelect != null ? config.horizontalSelect : first;
+                tempNav.selectOnRight = config.defaultSelectable != null ? config.defaultSelectable : first;
                 config.left.navigation = tempNav;
             }
 
             if (config.right != null)
             {
                 tempNav = config.right.navigation;
-                tempNav.selectOnLeft = config.horizontalSelect != null ? config.horizontalSelect : first;
+                tempNav.selectOnLeft = config.defaultSelectable != null ? config.defaultSelectable : first;
                 config.right.navigation = tempNav;
             }
 
@@ -319,9 +319,21 @@ namespace Framework.UI
             {
                 var selectable = config.parent.GetChild(i).GetComponent<Selectable>();
 
-                if (selectable != null && (config.allowDisabled || (selectable.isActiveAndEnabled && selectable.interactable)))
+                if (selectable != null)
                 {
-                    selectables.Add(selectable);
+                    if ((config.allowDisabled || (selectable.isActiveAndEnabled && selectable.interactable)))
+                    {
+                        selectables.Add(selectable);
+                    }
+
+                    selectable.navigation = new Navigation
+                    {
+                        mode = selectable.navigation.mode,
+                        selectOnUp = null,
+                        selectOnDown = null,
+                        selectOnLeft = null,
+                        selectOnRight = null,
+                    };
                 }
             }
 
@@ -397,7 +409,7 @@ namespace Framework.UI
             var tRect = to.GetComponent<RectTransform>();
 
             var toRectCenterWorld = tRect.transform.TransformPoint(tRect.rect.center);
-            Vector2 toRectCenterLocal = fRect.InverseTransformPoint(toRectCenterWorld);
+            var toRectCenterLocal = (Vector2)fRect.InverseTransformPoint(toRectCenterWorld);
 
             var delta = toRectCenterLocal - fRect.rect.center;
 
@@ -424,11 +436,6 @@ namespace Framework.UI
         public Transform parent;
 
         /// <summary>
-        /// Allow navigation to disabled selectables in the group.
-        /// </summary>
-        public bool allowDisabled;
-
-        /// <summary>
         /// The selectable to nativate to above the group.
         /// </summary>
         public Selectable up;
@@ -447,22 +454,26 @@ namespace Framework.UI
 
         /// <summary>
         /// The selectable in the selectable group to select when navigating from
-        /// selectables to the left or right when configuring vertical navigation.
-        /// By default this is the first selectable in the group.
+        /// the left or right when configuring vertical navigation, or from the top
+        /// or bottom when configuring horizontal navigation.
         /// </summary>
-        public Selectable horizontalSelect;
-        /// <summary>
-        /// The selectable in the selectable group to select when navigating from
-        /// selectables to the top or bottom when configuring horizontal navigation.
+        /// <remarks>
         /// By default this is the first selectable in the group.
-        /// </summary>
-        public Selectable verticalSelect;
+        /// </remarks>
+        public Selectable defaultSelectable;
 
         /// <summary>
-        /// Allow navigation between the first and last selectable. If this config
-        /// uses the up/down/left/right selectables, we follow along their navigation
-        /// chain in the relevant direction and wrap to the last avaiable element.
+        /// Allow navigation between the first and last selectable.
         /// </summary>
+        /// <remarks>
+        /// If this config uses the up/down/left/right selectables, we follow along their 
+        /// navigation chain in the relevant direction and wrap to the last avaiable element.
+        /// </remarks>
         public bool wrap;
+
+        /// <summary>
+        /// Allow navigation to disabled selectables in the group.
+        /// </summary>
+        public bool allowDisabled;
     }
 }

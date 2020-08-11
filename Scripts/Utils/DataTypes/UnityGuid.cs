@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Framework
 {
     /// <summary>
-    /// A Guid that can be serialized by Unity.
+    /// A <see cref="Guid"/> that can be serialized by Unity.
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Explicit)]
