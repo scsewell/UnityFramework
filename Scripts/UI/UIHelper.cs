@@ -321,7 +321,7 @@ namespace Framework.UI
 
                 if (selectable != null)
                 {
-                    if ((config.allowDisabled || (selectable.isActiveAndEnabled && selectable.interactable)))
+                    if (config.allowDisabled || (selectable.isActiveAndEnabled && selectable.interactable))
                     {
                         selectables.Add(selectable);
                     }

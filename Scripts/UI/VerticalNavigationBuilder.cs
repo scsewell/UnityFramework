@@ -15,6 +15,7 @@ namespace Framework.UI
             "By default this is the first selectable in the group.")]
         private Selectable m_horizontalSelect = null;
 
+
         /// <inheritdoc/>
         protected override List<Selectable> OnBuildNavigation()
         {

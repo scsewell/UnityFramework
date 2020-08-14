@@ -36,6 +36,7 @@ namespace Framework.UI
         [Tooltip("Allow navigation to disabled selectables in the group.")]
         protected bool m_allowDisabled = false;
 
+
         /// <summary>
         /// The selectables in the navigation group.
         /// </summary>
