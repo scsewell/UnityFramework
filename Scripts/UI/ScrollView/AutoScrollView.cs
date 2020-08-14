@@ -21,13 +21,14 @@ namespace Framework.UI
         [SerializeField]
         [Tooltip("The amount of smoothing applied when auto-scrolling.")]
         [Range(0f, 1f)]
-        private float m_smoothing = 0.0f;
+        private float m_smoothing = 0f;
 
 
+        private ScrollRect m_scrollRect;
         private float m_targetScrollPos;
         private bool m_snap;
-        private ScrollRect m_scrollRect;
-        private GameObject m_selected = null;
+        private EventSystem m_eventSystem;
+        private GameObject m_lastSelected;
 
 
         private void Awake()
@@ -37,8 +38,10 @@ namespace Framework.UI
 
         private void OnEnable()
         {
-            m_targetScrollPos = m_scrollRect.normalizedPosition.y;
-            m_snap = false;
+            m_eventSystem = null;
+            m_lastSelected = null;
+
+            SnapToPosition(m_scrollRect.normalizedPosition.y);
         }
 
         private void LateUpdate()
@@ -46,10 +49,10 @@ namespace Framework.UI
             UpdateScrollTarget();
 
             float scrollPos;
-            if (m_snap)
+            if (m_snap || m_smoothing == 0f)
             {
-                scrollPos = m_targetScrollPos;
                 m_snap = false;
+                scrollPos = m_targetScrollPos;
             }
             else
             {
@@ -59,19 +62,48 @@ namespace Framework.UI
             m_scrollRect.normalizedPosition = new Vector2(0f, scrollPos);
         }
 
+        /// <summary>
+        /// Sets the scroll position.
+        /// </summary>
+        /// <param name="normalizedPosition">The scroll position, where 0 is the bottom
+        /// and 1 is the top.</param>
+        public void SnapToPosition(float normalizedPosition)
+        {
+            m_targetScrollPos = normalizedPosition;
+            m_snap = true;
+        }
+
+        /// <summary>
+        /// Change the scroll view to use the selection of the currently executing event system.
+        /// </summary>
+        internal void CaptureEventSystem()
+        {
+            m_eventSystem = EventSystem.current;
+        }
+
         private void UpdateScrollTarget()
         {
-            var lastSelected = m_selected;
-            m_selected = EventSystem.current.currentSelectedGameObject;
+            // We only need to update the scroll target if the selection has changed since we
+            // last updated and the selected element is either an element in the scroll view
+            // or an transform under the selection group.
+            if (m_eventSystem == null)
+            {
+                SnapToPosition(1f);
+                return;
+            }
 
-            if (m_selected == null || m_selected == lastSelected)
+            var lastSelected = m_lastSelected;
+            var selected = m_eventSystem.currentSelectedGameObject;
+            m_lastSelected = selected;
+
+            if (selected == null || selected == lastSelected)
             {
                 return;
             }
 
-            var rt = m_selected.GetComponent<RectTransform>();
+            var rt = selected.GetComponent<RectTransform>();
 
-            if (!rt.IsChildOf(m_scrollRect.content))
+            if (rt == null || !rt.IsChildOf(m_scrollRect.content))
             {
                 if (m_selectionGroup != null && rt.IsChildOf(m_selectionGroup))
                 {
@@ -85,9 +117,7 @@ namespace Framework.UI
             var viewportHeight = m_scrollRect.viewport.rect.height;
             var excessHeight = contentHeight - viewportHeight;
 
-            var scroll = m_scrollRect.normalizedPosition.y;
-
-            var viewBottom = (excessHeight * scroll) - contentHeight;
+            var viewBottom = (excessHeight * m_targetScrollPos) - contentHeight;
             var viewTop = viewBottom + viewportHeight;
 
             // find the bounds of the selected item
@@ -119,20 +149,6 @@ namespace Framework.UI
 
             // find the normalized scroll position that shows the desired view
             m_targetScrollPos = Mathf.Clamp01((desiredViewBottom + contentHeight) / excessHeight);
-        }
-
-        /// <summary>
-        /// Sets the scroll position.
-        /// </summary>
-        /// <param name="normalizedPosition">The scroll position, where 0 is the bottom
-        /// and 1 is the top.</param>
-        public void SnapToPosition(float normalizedPosition)
-        {
-            if (m_targetScrollPos != normalizedPosition)
-            {
-                m_snap = true;
-                m_targetScrollPos = normalizedPosition;
-            }
         }
     }
 }

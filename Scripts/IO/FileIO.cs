@@ -12,9 +12,32 @@ namespace Framework.IO
     public static class FileIO
     {
         /// <summary>
-        /// The folder config files are saved to in the project directory.
+        /// The directory where the application can safely write persistent files.
         /// </summary>
-        private static string EDITOR_CONFIGS_FOLDER = "Configs/";
+        public static string ConfigDirectory { get; private set; }
+
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Init()
+        {
+            switch (Application.platform)
+            {
+                case RuntimePlatform.OSXEditor:
+                case RuntimePlatform.LinuxEditor:
+                case RuntimePlatform.WindowsEditor:
+                {
+                    var project = new DirectoryInfo(Application.dataPath).Parent;
+                    ConfigDirectory = Path.Combine(project.FullName, "Configs/");
+                    break;
+                }
+                default:
+                {
+                    ConfigDirectory = Application.persistentDataPath;
+                    break;
+                }
+            }
+        }
+
 
         /// <summary>
         /// Gets the files in the given directory.
@@ -196,22 +219,6 @@ namespace Framework.IO
             {
                 Debug.LogError($"Failed to delete file \"{path}\"! {e}");
                 return false;
-            }
-        }
-
-        /// <summary>
-        /// Gets the directory where configuration file can be written.
-        /// </summary>
-        public static string GetConfigDirectory()
-        {
-            switch (Application.platform)
-            {
-                case RuntimePlatform.OSXEditor:
-                case RuntimePlatform.LinuxEditor:
-                case RuntimePlatform.WindowsEditor:
-                    return EDITOR_CONFIGS_FOLDER;
-                default:
-                    return new DirectoryInfo(Application.dataPath).Parent.FullName;
             }
         }
     }

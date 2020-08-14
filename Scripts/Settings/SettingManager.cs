@@ -123,7 +123,7 @@ namespace Framework.Settings
         /// </summary>
         public void Load()
         {
-            var path = Path.Combine(FileIO.GetConfigDirectory(), FILE_NAME);
+            var path = Path.Combine(FileIO.ConfigDirectory, FILE_NAME);
 
             if (FileIO.ReadFileText(path, out var json))
             {
@@ -142,7 +142,7 @@ namespace Framework.Settings
         /// </summary>
         public void Save()
         {
-            var path = Path.Combine(FileIO.GetConfigDirectory(), FILE_NAME);
+            var path = Path.Combine(FileIO.ConfigDirectory, FILE_NAME);
 
             if (FileIO.WriteFile(path, SettingSerializer.ToJson(m_categoryToSettings)))
             {
