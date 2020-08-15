@@ -44,25 +44,25 @@ namespace Framework.AssetBundles
         public static string ModBundlePath => $"{Application.persistentDataPath}/Bundles/";
 
 
-        private static readonly List<BundleDirectory> m_bundlesPaths = new List<BundleDirectory>();
-        private static readonly List<BundleData> m_loadedBundles = new List<BundleData>();
-        private static readonly List<BundleData> m_bundlesToRemove = new List<BundleData>();
-        private static readonly Dictionary<string, BundleData> m_nameToBundle = new Dictionary<string, BundleData>();
-        private static bool m_autoUnloadBundles;
+        private static readonly List<BundleDirectory> s_bundlesPaths = new List<BundleDirectory>();
+        private static readonly List<BundleData> s_loadedBundles = new List<BundleData>();
+        private static readonly List<BundleData> s_bundlesToRemove = new List<BundleData>();
+        private static readonly Dictionary<string, BundleData> s_nameToBundle = new Dictionary<string, BundleData>();
+        private static bool s_autoUnloadBundles;
 
         /// <summary>
         /// Will the bundle manager automatically decide when to check for unused bundles.
         /// </summary>
         public static bool AutoUnloadBundles
         {
-            get => m_autoUnloadBundles;
+            get => s_autoUnloadBundles;
             set
             {
-                if (m_autoUnloadBundles != value)
+                if (s_autoUnloadBundles != value)
                 {
-                    m_autoUnloadBundles = value;
+                    s_autoUnloadBundles = value;
 
-                    if (m_autoUnloadBundles)
+                    if (s_autoUnloadBundles)
                     {
                         UnloadUsedBundlesAsync();
                     }
@@ -79,12 +79,12 @@ namespace Framework.AssetBundles
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Init()
         {
-            m_bundlesPaths.Clear();
-            m_loadedBundles.Clear();
-            m_bundlesToRemove.Clear();
-            m_nameToBundle.Clear();
+            s_bundlesPaths.Clear();
+            s_loadedBundles.Clear();
+            s_bundlesToRemove.Clear();
+            s_nameToBundle.Clear();
 
-            m_autoUnloadBundles = true;
+            s_autoUnloadBundles = true;
             AutoUnloadPeriod = 5.0f;
         }
 
@@ -108,13 +108,13 @@ namespace Framework.AssetBundles
             // close all asset bundles on quit
             Application.quitting += () =>
             {
-                foreach (var bundle in m_loadedBundles)
+                foreach (var bundle in s_loadedBundles)
                 {
                     bundle.Dispose();
                 }
 
-                m_loadedBundles.Clear();
-                m_nameToBundle.Clear();
+                s_loadedBundles.Clear();
+                s_nameToBundle.Clear();
             };
         }
 
@@ -133,24 +133,24 @@ namespace Framework.AssetBundles
         public static void UnloadUnusedBundles()
         {
             // check which bundles are not needed
-            foreach (var bundle in m_loadedBundles)
+            foreach (var bundle in s_loadedBundles)
             {
                 if (!bundle.IsUsed)
                 {
-                    m_bundlesToRemove.Add(bundle);
+                    s_bundlesToRemove.Add(bundle);
                 }
             }
 
             // unload the unused bundles
-            foreach (var bundle in m_bundlesToRemove)
+            foreach (var bundle in s_bundlesToRemove)
             {
-                m_loadedBundles.Remove(bundle);
-                m_nameToBundle.Remove(bundle.bundleName);
+                s_loadedBundles.Remove(bundle);
+                s_nameToBundle.Remove(bundle.bundleName);
 
                 bundle.Dispose();
             }
 
-            m_bundlesToRemove.Clear();
+            s_bundlesToRemove.Clear();
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace Framework.AssetBundles
             }
 
             // only register the path if it is not already included
-            if (m_bundlesPaths.Any(x => x.path == directory.FullName))
+            if (s_bundlesPaths.Any(x => x.path == directory.FullName))
             {
                 return false;
             }
@@ -189,8 +189,8 @@ namespace Framework.AssetBundles
             // register the directory and sort the directories by decending priority
             var bundleDir = new BundleDirectory(directory.FullName, priority);
 
-            m_bundlesPaths.Add(bundleDir);
-            m_bundlesPaths.Sort((x, y) => -x.priority.CompareTo(y.priority));
+            s_bundlesPaths.Add(bundleDir);
+            s_bundlesPaths.Sort((x, y) => -x.priority.CompareTo(y.priority));
 
             Debug.Log($"Registered bundle directory \"{bundleDir.path}\" with priority {bundleDir.priority}.");
             return true;
@@ -214,7 +214,7 @@ namespace Framework.AssetBundles
             // find the available bundles
             var bundles = new List<string>();
 
-            foreach (var directory in m_bundlesPaths)
+            foreach (var directory in s_bundlesPaths)
             {
                 if (GetBundleDirectory(Path.Combine(directory.path, bundleDir), out var dirInfo))
                 {
@@ -311,7 +311,7 @@ namespace Framework.AssetBundles
         private static BundleData LoadBundle(string bundleName)
         {
             // check if this bundle is already loaded
-            if (m_nameToBundle.TryGetValue(bundleName, out var bundleData))
+            if (s_nameToBundle.TryGetValue(bundleName, out var bundleData))
             {
                 return bundleData;
             }
@@ -319,7 +319,7 @@ namespace Framework.AssetBundles
             // find the first bundle with a matching name
             FileInfo file = null;
 
-            foreach (var directory in m_bundlesPaths)
+            foreach (var directory in s_bundlesPaths)
             {
                 if (GetBundleFile(Path.Combine(directory.path, bundleName), out file))
                 {
@@ -337,8 +337,8 @@ namespace Framework.AssetBundles
             // create the bundle information
             bundleData = new BundleData(bundleName, file.FullName);
 
-            m_loadedBundles.Add(bundleData);
-            m_nameToBundle.Add(bundleName, bundleData);
+            s_loadedBundles.Add(bundleData);
+            s_nameToBundle.Add(bundleName, bundleData);
 
             return bundleData;
         }

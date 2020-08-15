@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,6 +12,15 @@ namespace Framework.UI
     /// </summary>
     public static class UIHelper
     {
+        private static FieldInfo s_EventSystem;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Init()
+        {
+            s_EventSystem = null;
+        }
+
+
         /// <summary>
         /// Creates a child RectTransform under an object with an identity local transform.
         /// </summary>
@@ -69,275 +79,6 @@ namespace Framework.UI
             layout.minHeight = size;
             layout.minWidth = size;
             return rect;
-        }
-
-        /// <summary>
-        /// Configues the navigation between a group of horizontally arranged selectables.
-        /// </summary>
-        /// <param name="config">The configutation options.</param>
-        /// <returns>The horizontal selectable group.</returns>
-        public static List<Selectable> SetNavigationHorizontal(NavConfig config)
-        {
-            // get the selectable group
-            var selectables = GetSelectables(config);
-
-            if (selectables.Count == 0)
-            {
-                return selectables;
-            }
-
-            var first = selectables[0];
-            var last = selectables[selectables.Count - 1];
-
-            // configure navigation in the group
-            var tempNav = new Navigation
-            {
-                selectOnUp = config.up,
-                selectOnDown = config.down,
-            };
-
-            for (var i = 0; i < selectables.Count; i++)
-            {
-                var current = selectables[i];
-
-                if (i == 0)
-                {
-                    if (config.left != null)
-                    {
-                        tempNav.selectOnLeft = config.left;
-                    }
-                    else if (config.wrap)
-                    {
-                        tempNav.selectOnLeft = FindLastSelectableInChain(last, selectables, MoveDirection.Right);
-                    }
-                    else
-                    {
-                        tempNav.selectOnLeft = null;
-                    }
-                }
-                else
-                {
-                    tempNav.selectOnLeft = selectables[i - 1];
-                }
-
-                if (i == selectables.Count - 1)
-                {
-                    if (config.right != null)
-                    {
-                        tempNav.selectOnRight = config.right;
-                    }
-                    else if (config.wrap)
-                    {
-                        tempNav.selectOnRight = FindLastSelectableInChain(first, selectables, MoveDirection.Left);
-                    }
-                    else
-                    {
-                        tempNav.selectOnRight = null;
-                    }
-                }
-                else
-                {
-                    tempNav.selectOnRight = selectables[i + 1];
-                }
-
-                current.navigation = tempNav;
-            }
-
-            // configure navigation to the group
-            if (config.up != null)
-            {
-                tempNav = config.up.navigation;
-                tempNav.selectOnDown = config.defaultSelectable != null ? config.defaultSelectable : first;
-                config.up.navigation = tempNav;
-            }
-
-            if (config.down != null)
-            {
-                tempNav = config.down.navigation;
-                tempNav.selectOnUp = config.defaultSelectable != null ? config.defaultSelectable : first;
-                config.down.navigation = tempNav;
-            }
-
-            if (config.left != null)
-            {
-                tempNav = config.left.navigation;
-                tempNav.selectOnRight = first;
-                config.left.navigation = tempNav;
-            }
-            else if (config.wrap)
-            {
-                var wrap = FindLastSelectableInChain(last, selectables, MoveDirection.Right);
-
-                tempNav = wrap.navigation;
-                tempNav.selectOnRight = first;
-                wrap.navigation = tempNav;
-            }
-
-            if (config.right != null)
-            {
-                tempNav = config.right.navigation;
-                tempNav.selectOnLeft = last;
-                config.right.navigation = tempNav;
-            }
-            else if (config.wrap)
-            {
-                var wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Left);
-
-                tempNav = wrap.navigation;
-                tempNav.selectOnLeft = last;
-                wrap.navigation = tempNav;
-            }
-
-            return selectables;
-        }
-
-        /// <summary>
-        /// Configues the navigation between a group of vertically arranged selectables.
-        /// </summary>
-        /// <param name="config">The configutation options.</param>
-        /// <returns>The vertical selectable group.</returns>
-        public static List<Selectable> SetNavigationVertical(NavConfig config)
-        {
-            // get the selectable group
-            var selectables = GetSelectables(config);
-
-            if (selectables.Count == 0)
-            {
-                return selectables;
-            }
-
-            var first = selectables[0];
-            var last = selectables[selectables.Count - 1];
-
-            // configure navigation in the group
-            var tempNav = new Navigation
-            {
-                selectOnLeft = config.left,
-                selectOnRight = config.right,
-            };
-
-            for (var i = 0; i < selectables.Count; i++)
-            {
-                var current = selectables[i];
-
-                if (i == 0)
-                {
-                    if (config.up != null)
-                    {
-                        tempNav.selectOnUp = config.up;
-                    }
-                    else if (config.wrap)
-                    {
-                        tempNav.selectOnUp = FindLastSelectableInChain(last, selectables, MoveDirection.Down);
-                    }
-                    else
-                    {
-                        tempNav.selectOnUp = null;
-                    }
-                }
-                else
-                {
-                    tempNav.selectOnUp = selectables[i - 1];
-                }
-
-                if (i == selectables.Count - 1)
-                {
-                    if (config.down != null)
-                    {
-                        tempNav.selectOnDown = config.down;
-                    }
-                    else if (config.wrap)
-                    {
-                        tempNav.selectOnDown = FindLastSelectableInChain(first, selectables, MoveDirection.Up);
-                    }
-                    else
-                    {
-                        tempNav.selectOnDown = null;
-                    }
-                }
-                else
-                {
-                    tempNav.selectOnDown = selectables[i + 1];
-                }
-
-                current.navigation = tempNav;
-            }
-
-            // configure navigation to the group
-            if (config.up != null)
-            {
-                tempNav = config.up.navigation;
-                tempNav.selectOnDown = first;
-                config.up.navigation = tempNav;
-            }
-            else if (config.wrap)
-            {
-                var wrap = FindLastSelectableInChain(last, selectables, MoveDirection.Down);
-
-                tempNav = wrap.navigation;
-                tempNav.selectOnDown = first;
-                wrap.navigation = tempNav;
-            }
-
-            if (config.down != null)
-            {
-                tempNav = config.down.navigation;
-                tempNav.selectOnUp = last;
-                config.down.navigation = tempNav;
-            }
-            else if (config.wrap)
-            {
-                var wrap = FindLastSelectableInChain(first, selectables, MoveDirection.Up);
-
-                tempNav = wrap.navigation;
-                tempNav.selectOnUp = last;
-                wrap.navigation = tempNav;
-            }
-
-            if (config.left != null)
-            {
-                tempNav = config.left.navigation;
-                tempNav.selectOnRight = config.defaultSelectable != null ? config.defaultSelectable : first;
-                config.left.navigation = tempNav;
-            }
-
-            if (config.right != null)
-            {
-                tempNav = config.right.navigation;
-                tempNav.selectOnLeft = config.defaultSelectable != null ? config.defaultSelectable : first;
-                config.right.navigation = tempNav;
-            }
-
-            return selectables;
-        }
-
-        private static List<Selectable> GetSelectables(NavConfig config)
-        {
-            var selectables = new List<Selectable>();
-
-            for (var i = 0; i < config.parent.childCount; i++)
-            {
-                var selectable = config.parent.GetChild(i).GetComponent<Selectable>();
-
-                if (selectable != null)
-                {
-                    if (config.allowDisabled || (selectable.isActiveAndEnabled && selectable.interactable))
-                    {
-                        selectables.Add(selectable);
-                    }
-
-                    selectable.navigation = new Navigation
-                    {
-                        mode = selectable.navigation.mode,
-                        selectOnUp = null,
-                        selectOnDown = null,
-                        selectOnLeft = null,
-                        selectOnRight = null,
-                    };
-                }
-            }
-
-            return selectables;
         }
 
         private static readonly HashSet<Selectable> s_visited = new HashSet<Selectable>();
@@ -423,57 +164,19 @@ namespace Framework.UI
 
             return false;
         }
-    }
-
-    /// <summary>
-    /// A configuration used for the auto navigation builder utilites.
-    /// </summary>
-    public struct NavConfig
-    {
-        /// <summary>
-        /// The parent of the selectable group.
-        /// </summary>
-        public Transform parent;
 
         /// <summary>
-        /// The selectable to nativate to above the group.
+        /// Gets the event system that sent this event.
         /// </summary>
-        public Selectable up;
-        /// <summary>
-        /// The selectable to nativate to below the group.
-        /// </summary>
-        public Selectable down;
-        /// <summary>
-        /// The selectable to nativate to the left of the group.
-        /// </summary>
-        public Selectable left;
-        /// <summary>
-        /// The selectable to nativate to the right of the group.
-        /// </summary>
-        public Selectable right;
-
-        /// <summary>
-        /// The selectable in the selectable group to select when navigating from
-        /// the left or right when configuring vertical navigation, or from the top
-        /// or bottom when configuring horizontal navigation.
-        /// </summary>
-        /// <remarks>
-        /// By default this is the first selectable in the group.
-        /// </remarks>
-        public Selectable defaultSelectable;
-
-        /// <summary>
-        /// Allow navigation between the first and last selectable.
-        /// </summary>
-        /// <remarks>
-        /// If this config uses the up/down/left/right selectables, we follow along their 
-        /// navigation chain in the relevant direction and wrap to the last avaiable element.
-        /// </remarks>
-        public bool wrap;
-
-        /// <summary>
-        /// Allow navigation to disabled selectables in the group.
-        /// </summary>
-        public bool allowDisabled;
+        /// <param name="eventData">The event data to get the source of.</param>
+        /// <returns>The event system.</returns>
+        public static EventSystem GetEventSystem(this BaseEventData eventData)
+        {
+            if (s_EventSystem == null)
+            {
+                s_EventSystem = typeof(BaseEventData).GetField("m_EventSystem", BindingFlags.NonPublic | BindingFlags.Instance);
+            }
+            return s_EventSystem.GetValue(eventData) as EventSystem;
+        }
     }
 }

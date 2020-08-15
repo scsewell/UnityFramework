@@ -76,9 +76,10 @@ namespace Framework.UI
         /// <summary>
         /// Change the scroll view to use the selection of the currently executing event system.
         /// </summary>
-        internal void CaptureEventSystem()
+        /// <param name="eventSystem">The executing event system.</param>
+        internal void CaptureEventSystem(EventSystem eventSystem)
         {
-            m_eventSystem = EventSystem.current;
+            m_eventSystem = eventSystem;
         }
 
         private void UpdateScrollTarget()

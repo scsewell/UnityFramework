@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Framework.UI
@@ -11,25 +12,128 @@ namespace Framework.UI
     public class HorizontalNavigationBuilder : NavigationBuilder
     {
         [SerializeField]
-        [Tooltip("The selectable in the selectable group to select when navigating from selectables to the top or bottom when configuring horizontal navigation. " +
+        [Tooltip("The selectable in the selectable group to select when navigating to the group from the top or bottom when configuring horizontal navigation. " +
             "By default this is the first selectable in the group.")]
         private Selectable m_verticalSelect = null;
 
 
-        /// <inheritdoc/>
-        protected override List<Selectable> OnBuildNavigation()
+        /// <summary>
+        /// The selectable in the selectable group to select when navigating to the group from the top or bottom.
+        /// </summary>
+        /// <remarks>
+        /// By default this is the first selectable in the group.
+        /// </remarks>
+        public Selectable VerticalSelect
         {
-            return UIHelper.SetNavigationHorizontal(new NavConfig()
+            get => m_verticalSelect;
+            set => m_verticalSelect = value;
+        }
+
+
+        /// <inheritdoc/>
+        protected override void OnBuildNavigation(List<Selectable> selectables)
+        {
+            var first = selectables[0];
+            var last = selectables[selectables.Count - 1];
+
+            // configure navigation between and out of selectables in the group
+            var tempNav = new Navigation
             {
-                parent = transform,
-                up = m_up,
-                down = m_down,
-                left = m_left,
-                right = m_right,
-                defaultSelectable = m_verticalSelect,
-                wrap = m_wrap,
-                allowDisabled = m_allowDisabled,
-            });
+                selectOnUp = m_up,
+                selectOnDown = m_down,
+            };
+
+            for (var i = 0; i < selectables.Count; i++)
+            {
+                var current = selectables[i];
+
+                if (i == 0)
+                {
+                    if (m_left != null)
+                    {
+                        tempNav.selectOnLeft = m_left;
+                    }
+                    else if (m_wrap)
+                    {
+                        tempNav.selectOnLeft = UIHelper.FindLastSelectableInChain(last, selectables, MoveDirection.Right);
+                    }
+                    else
+                    {
+                        tempNav.selectOnLeft = null;
+                    }
+                }
+                else
+                {
+                    tempNav.selectOnLeft = selectables[i - 1];
+                }
+
+                if (i == selectables.Count - 1)
+                {
+                    if (m_right != null)
+                    {
+                        tempNav.selectOnRight = m_right;
+                    }
+                    else if (m_wrap)
+                    {
+                        tempNav.selectOnRight = UIHelper.FindLastSelectableInChain(first, selectables, MoveDirection.Left);
+                    }
+                    else
+                    {
+                        tempNav.selectOnRight = null;
+                    }
+                }
+                else
+                {
+                    tempNav.selectOnRight = selectables[i + 1];
+                }
+
+                current.navigation = tempNav;
+            }
+
+            // configure navigation to the group
+            if (m_up != null)
+            {
+                tempNav = m_up.navigation;
+                tempNav.selectOnDown = m_verticalSelect != null ? m_verticalSelect : first;
+                m_up.navigation = tempNav;
+            }
+
+            if (m_down != null)
+            {
+                tempNav = m_down.navigation;
+                tempNav.selectOnUp = m_verticalSelect != null ? m_verticalSelect : first;
+                m_down.navigation = tempNav;
+            }
+
+            if (m_left != null)
+            {
+                tempNav = m_left.navigation;
+                tempNav.selectOnRight = first;
+                m_left.navigation = tempNav;
+            }
+            else if (m_wrap)
+            {
+                var wrap = UIHelper.FindLastSelectableInChain(last, selectables, MoveDirection.Right);
+
+                tempNav = wrap.navigation;
+                tempNav.selectOnRight = first;
+                wrap.navigation = tempNav;
+            }
+
+            if (m_right != null)
+            {
+                tempNav = m_right.navigation;
+                tempNav.selectOnLeft = last;
+                m_right.navigation = tempNav;
+            }
+            else if (m_wrap)
+            {
+                var wrap = UIHelper.FindLastSelectableInChain(first, selectables, MoveDirection.Left);
+
+                tempNav = wrap.navigation;
+                tempNav.selectOnLeft = last;
+                wrap.navigation = tempNav;
+            }
         }
     }
 }

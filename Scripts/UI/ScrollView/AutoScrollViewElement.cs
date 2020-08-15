@@ -16,7 +16,7 @@ namespace Framework.UI
         {
             if (HasReferences())
             {
-                m_scrollView.CaptureEventSystem();
+                m_scrollView.CaptureEventSystem(eventData.GetEventSystem());
             }
         }
 
