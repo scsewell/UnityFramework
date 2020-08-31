@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace Framework
 {
@@ -21,7 +22,7 @@ namespace Framework
         /// while a value of one results in infinite smoothing (returns <paramref name="b"/>).</param>
         /// <returns>The damped value.</returns>
         /// <seealso href="http://www.rorydriscoll.com/2016/03/07/frame-rate-independent-damping-using-lerp/"/>
-        public static float Damp(float a, float b, float smoothing)
+        public static float Damp(float a, float b, double smoothing)
         {
             return Damp(a, b, smoothing, Time.deltaTime);
         }
@@ -41,9 +42,11 @@ namespace Framework
         /// <param name="dt">The delta time in seconds.</param>
         /// <returns>The damped value.</returns>
         /// <seealso href="http://www.rorydriscoll.com/2016/03/07/frame-rate-independent-damping-using-lerp/"/>
-        public static float Damp(float a, float b, float smoothing, float dt)
+        public static float Damp(float a, float b, double smoothing, float dt)
         {
-            return Mathf.Lerp(a, b, 1f - Mathf.Pow(Mathf.Clamp01(smoothing), dt));
+            smoothing = Math.Min(Math.Max(smoothing, 0.0), 1.0);
+            var fac = 1.0 - Math.Pow(smoothing, dt);
+            return (float)(a + ((b - a) * fac));
         }
     }
 }
