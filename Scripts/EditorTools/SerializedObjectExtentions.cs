@@ -30,7 +30,7 @@ namespace Framework.EditorTools
             var serializedObject = property.serializedObject;
             serializedObject.ApplyModifiedProperties();
 
-            // converty the property path in to a more workable format
+            // convert the property path in to a more workable format
             var path = property.propertyPath.Replace(".Array.data", string.Empty);
             var elements = path.Split('.');
 
