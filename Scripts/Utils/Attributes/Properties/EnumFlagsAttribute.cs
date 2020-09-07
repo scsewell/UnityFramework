@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+
+using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -25,11 +27,12 @@ namespace Framework
             {
                 EditorGUI.showMixedValue = prop.hasMultipleDifferentValues;
 
-                var flags = EditorGUI.MaskField(pos, property.content, prop.intValue, prop.enumNames);
+                var value = Enum.ToObject(fieldInfo.FieldType, prop.intValue) as Enum;
+                var flags = EditorGUI.EnumFlagsField(pos, property.content, value);
                 
                 if (change.changed)
                 {
-                    prop.intValue = flags;
+                    prop.intValue = (int)(object)flags;
                 }
             }
         }
