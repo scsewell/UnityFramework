@@ -33,9 +33,6 @@ namespace Framework.UI
         /// <inheritdoc/>
         protected override void OnBuildNavigation(List<Selectable> selectables)
         {
-            var first = selectables[0];
-            var last = selectables[selectables.Count - 1];
-
             // configure navigation between and out of selectables in the group
             var tempNav = new Navigation
             {
@@ -43,11 +40,14 @@ namespace Framework.UI
                 selectOnDown = m_down,
             };
 
+            var firstIndex = FindNextEnabledSelectable(0, out var first);
+            var lastIndex = FindPreviousEnabledSelectable(selectables.Count - 1, out var last);
+
             for (var i = 0; i < selectables.Count; i++)
             {
                 var current = selectables[i];
 
-                if (i == 0)
+                if (i <= firstIndex)
                 {
                     if (m_left != null)
                     {
@@ -64,10 +64,11 @@ namespace Framework.UI
                 }
                 else
                 {
-                    tempNav.selectOnLeft = selectables[i - 1];
+                    FindPreviousEnabledSelectable(i - 1, out var previous);
+                    tempNav.selectOnLeft = previous;
                 }
 
-                if (i == selectables.Count - 1)
+                if (i >= lastIndex)
                 {
                     if (m_right != null)
                     {
@@ -84,7 +85,8 @@ namespace Framework.UI
                 }
                 else
                 {
-                    tempNav.selectOnRight = selectables[i + 1];
+                    FindNextEnabledSelectable(i + 1, out var next);
+                    tempNav.selectOnRight = next;
                 }
 
                 current.navigation = tempNav;

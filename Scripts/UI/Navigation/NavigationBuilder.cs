@@ -121,10 +121,7 @@ namespace Framework.UI
 
                 if (child.TryGetComponent<Selectable>(out var selectable))
                 {
-                    if (m_allowDisabled || (selectable.isActiveAndEnabled && selectable.interactable))
-                    {
-                        m_selectables.Add(selectable);
-                    }
+                    m_selectables.Add(selectable);
 
                     // clear existing navigation or else the algorithm will generate incorrect results
                     selectable.navigation = new Navigation
@@ -149,5 +146,50 @@ namespace Framework.UI
         /// </summary>
         /// <param name="selectables">The selectables to include in the navigation chain.</param>
         protected abstract void OnBuildNavigation(List<Selectable> selectables);
+
+        /// <summary>
+        /// Gets the next selectable that is enabled and can be selected.
+        /// </summary>
+        /// <param name="startIndex">The index in the selectables array to start at.</param>
+        /// <param name="selectable">The next selectable, or null if none was found.</param>
+        /// <returns>The index of the returned selectable.</returns>
+        protected int FindNextEnabledSelectable(int startIndex, out Selectable selectable)
+        {
+            for (var i = startIndex; i < m_selectables.Count; i++)
+            {
+                if (IsEnabled(m_selectables[i]))
+                {
+                    selectable = m_selectables[i];
+                    return i;
+                }
+            }
+            selectable = null;
+            return -1;
+        }
+
+        /// <summary>
+        /// Gets the previous selectable that is enabled and can be selected.
+        /// </summary>
+        /// <param name="startIndex">The index in the selectables array to start at.</param>
+        /// <param name="selectable">The previous selectable, or null if none was found.</param>
+        /// <returns>The index of the returned selectable.</returns>
+        protected int FindPreviousEnabledSelectable(int startIndex, out Selectable selectable)
+        {
+            for (var i = startIndex; i >= 0; i--)
+            {
+                if (IsEnabled(m_selectables[i]))
+                {
+                    selectable = m_selectables[i];
+                    return i;
+                }
+            }
+            selectable = null;
+            return -1;
+        }
+
+        private bool IsEnabled(Selectable selectable)
+        {
+            return m_allowDisabled || (selectable.isActiveAndEnabled && selectable.interactable);
+        }
     }
 }
