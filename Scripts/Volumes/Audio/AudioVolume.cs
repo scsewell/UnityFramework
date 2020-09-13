@@ -8,7 +8,7 @@ namespace Framework.Volumes
 
         [SerializeField]
         [Tooltip("The audio to play in this volume.")]
-        private AudioVolumeProfile m_audio;
+        private AudioVolumeProfile m_audio = null;
 
         [SerializeField]
         [Tooltip("The volume of the audio clip.")]

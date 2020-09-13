@@ -11,11 +11,11 @@ namespace Framework.Volumes
     {
         [SerializeField]
         [Tooltip("The audio clip to play.")]
-        private AudioClip m_clip;
+        private AudioClip m_clip = null;
 
         [SerializeField]
         [Tooltip("The mixer channel to play the audio clip on.")]
-        private AudioMixerGroup m_mixer;
+        private AudioMixerGroup m_mixer = null;
 
         [SerializeField]
         [Tooltip("Should the clip loop when it plays.")]

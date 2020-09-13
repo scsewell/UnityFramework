@@ -15,8 +15,8 @@ namespace Framework.Settings
         [Serializable]
         private class Mapping
         {
-            public string enumName;
-            public string displayName;
+            public string enumName = default;
+            public string displayName = default;
         }
 
         [SerializeField]

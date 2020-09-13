@@ -10,7 +10,7 @@ namespace Framework.Volumes
 
         [SerializeField]
         [Tooltip("The music to play in this volume.")]
-        private Music m_music;
+        private Music m_music = null;
 
         [SerializeField]
         [Range(0f, 1f)]
