@@ -24,7 +24,7 @@ namespace Framework.AssetBundles
         /// Sets the reference from the currently assigned asset guid.
         /// </summary>
         /// <returns>False if no asset with the given GUID exists.</returns>
-        public override bool UpdateBundlePath()
+        internal override bool UpdateBundlePath()
         {
             var assetPath = AssetDatabase.GUIDToAssetPath(m_assetGuid);
 

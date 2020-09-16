@@ -11,15 +11,17 @@ namespace Framework.Audio
         private readonly GameObject m_go = null;
         private readonly AudioSource[] m_sources = new AudioSource[2];
 
+        private float m_volume = 1.0f;
+        private bool m_pausable = true;
         private AudioMixerGroup m_mixer = null;
-        private Music m_currentTrack = null;
+        private Music m_song = null;
+        private AudioClip m_clip = null;
         private int m_lastMusicSource = 0;
         private double m_lastLoopTime = 0.0;
 
-        private float m_volume = 1.0f;
 
         /// <summary>
-        /// The volume of the music tracks.
+        /// The volume of the music track.
         /// </summary>
         public float Volume
         {
@@ -36,8 +38,6 @@ namespace Framework.Audio
                 }
             }
         }
-
-        private bool m_pausable = true;
 
         /// <summary>
         /// Does the music pause while the audio listener is paused.
@@ -61,6 +61,7 @@ namespace Framework.Audio
         /// Gets if any music track is currently playing.
         /// </summary>
         public bool IsPlaying => m_sources[0].isPlaying || m_sources[1].isPlaying;
+
 
         /// <summary>
         /// Creates a new music player.
@@ -100,9 +101,9 @@ namespace Framework.Audio
         {
             EnsureNotDisposed();
 
-            if (IsPlaying && m_currentTrack != null && m_currentTrack.CanLoop)
+            if (IsPlaying && m_song != null && m_song.CanLoop)
             {
-                var nextLoopTime = m_lastLoopTime + m_currentTrack.LoopTime;
+                var nextLoopTime = m_lastLoopTime + Music.GetLoopTime(m_song, m_clip);
 
                 // if near the end of the current loop start the next one
                 if (nextLoopTime - AudioSettings.dspTime < 0.1)
@@ -115,6 +116,9 @@ namespace Framework.Audio
         /// <summary>
         /// Plays a music track.
         /// </summary>
+        /// <remarks>
+        /// This will load the audio asynchronously and start playing it as soon as it is available.
+        /// </remarks>
         /// <param name="music">The music to play.</param>
         /// <param name="mixer">The mixer channel to play the music on.</param>
         public void Play(Music music, AudioMixerGroup mixer = null)
@@ -124,8 +128,8 @@ namespace Framework.Audio
             if (music != null)
             {
                 m_mixer = mixer;
-                m_currentTrack = music;
-                PlayScheduled(AudioSettings.dspTime + 0.01);
+                m_song = music;
+                Load(music);
             }
         }
 
@@ -139,7 +143,7 @@ namespace Framework.Audio
             m_sources[0].Stop();
             m_sources[1].Stop();
 
-            m_currentTrack = null;
+            m_song = null;
             m_sources[0].clip = null;
             m_sources[1].clip = null;
 
@@ -169,12 +173,19 @@ namespace Framework.Audio
             m_sources[1].Pause();
         }
 
+        private async void Load(Music music)
+        {
+            m_clip = await music.Track.GetAsync();
+
+            PlayScheduled(AudioSettings.dspTime + 0.01);
+        }
+
         private void PlayScheduled(double time)
         {
             var source = (m_lastMusicSource + 1) % m_sources.Length;
             var music = m_sources[source];
 
-            music.clip = m_currentTrack.Track;
+            music.clip = m_clip;
             music.outputAudioMixerGroup = m_mixer;
             music.PlayScheduled(time);
 

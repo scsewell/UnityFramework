@@ -197,13 +197,114 @@ namespace Framework.AssetBundles
         }
 
         /// <summary>
-        /// Loads a type of asset by name from asset bundles at a given path.
+        /// Loads the first asset of a given type from all asset bundles at a given path.
         /// </summary>
         /// <typeparam name="T">The type of asset to load from the bundles.</typeparam>
-        /// <param name="bundleDir">The path to the directory to load bundles from relative to the registered bundle directories.</param>
-        /// <param name="assetName">The name of the asset to load from the bundle.</param>
-        /// <returns>A new array contaning the loaded assets, or an empty array if the bundled assets could not be found.</returns>
+        /// <param name="bundleDir">The path to the directory to load the bundles from relative to the
+        /// registered bundle directories.</param>
+        /// <returns>A new array contaning the loaded assets, or an empty array if the bundled assets
+        /// could not be found.</returns>
+        public static async Task<T[]> LoadAssetsAsync<T>(string bundleDir) where T : Object
+        {
+            return await LoadMany(bundleDir, (bundleName) =>
+            {
+                return LoadAssetAsync<T>(bundleName);
+            });
+        }
+
+        /// <summary>
+        /// Loads a type of asset by name from all asset bundles at a given path.
+        /// </summary>
+        /// <typeparam name="T">The type of asset to load from the bundles.</typeparam>
+        /// <param name="bundleDir">The path to the directory to load the bundles from relative to the
+        /// registered bundle directories.</param>
+        /// <param name="assetName">The name of the asset to load from the bundles.</param>
+        /// <returns>A new array contaning the loaded assets, or an empty array if the bundled assets
+        /// could not be found.</returns>
         public static async Task<T[]> LoadAssetsAsync<T>(string bundleDir, string assetName) where T : Object
+        {
+            return await LoadMany(bundleDir, (bundleName) =>
+            {
+                return LoadAssetAsync<T>(bundleName, assetName);
+            });
+        }
+
+        /// <summary>
+        /// Loads the first asset of the given type from an asset bundle at a given path.
+        /// </summary>
+        /// <typeparam name="T">The type of asset to load from the bundle.</typeparam>
+        /// <param name="bundleName">The full name of the asset bundle to load the asset from.</param>
+        /// <returns>The loaded asset, or null if the bundled asset could not be found.</returns>
+        public static async Task<T> LoadAssetAsync<T>(string bundleName) where T : Object
+        {
+            // loading should only be done by the main thread
+            if (!ContextUtils.EnsureMainThread())
+            {
+                return null;
+            }
+
+            if (!TryLoadBundle(bundleName, out var bundle))
+            {
+                return null;
+            }
+
+            return await bundle.LoadAssetAsync<T>();
+        }
+
+        /// <summary>
+        /// Loads a type of asset by name from an asset bundle at a given path.
+        /// </summary>
+        /// <typeparam name="T">The type of asset to load from the bundle.</typeparam>
+        /// <param name="bundleName">The full name of the asset bundle to load the asset from.</param>
+        /// <param name="assetName">The name of the asset to load from the bundle.</param>
+        /// <returns>The loaded asset, or null if the bundled asset could not be found.</returns>
+        public static async Task<T> LoadAssetAsync<T>(string bundleName, string assetName) where T : Object
+        {
+            // loading should only be done by the main thread
+            if (!ContextUtils.EnsureMainThread())
+            {
+                return null;
+            }
+
+            if (!TryLoadBundle(bundleName, out var bundle))
+            {
+                return null;
+            }
+
+            return await bundle.LoadAssetAsync<T>(assetName);
+        }
+
+        /// <summary>
+        /// Loads a scene asset bundle at a given path.
+        /// </summary>
+        /// <param name="bundleName">The full name of the asset bundle to load the scene from.</param>
+        /// <returns>The path of the scene which can now be loaded, or null if no scene was found.</returns>
+        public static async Task<string> LoadSceneAsync(string bundleName)
+        {
+            // loading should only be done by the main thread
+            if (!ContextUtils.EnsureMainThread())
+            {
+                return null;
+            }
+
+            if (!TryLoadBundle(bundleName, out var bundle))
+            {
+                return null;
+            }
+
+            return await bundle.GetSceneAsync();
+        }
+
+        /// <summary>
+        /// Loads an asset from all asset bundles at a given path.
+        /// </summary>
+        /// <typeparam name="T">The type of asset to load from the bundles.</typeparam>
+        /// <param name="bundleDir">The path to the directory to load the bundles from relative to the
+        /// registered bundle directories.</param>
+        /// <param name="getAssetLoadOp">The function determining which asset to get from a bundle.</param>
+        /// <returns>A new array contaning the loaded assets, or an empty array if the bundled assets
+        /// could not be found.</returns>
+        private static async Task<T[]> LoadMany<T>(string bundleDir, Func<string, Task<T>> getAssetLoadOp) where T : Object
         {
             // loading should only be done by the main thread
             if (!ContextUtils.EnsureMainThread())
@@ -211,12 +312,12 @@ namespace Framework.AssetBundles
                 return new T[0];
             }
 
-            // find the available bundles
-            var bundles = new List<string>();
+            // find the first available bundle for each bundle name
+            var bundles = new HashSet<string>();
 
             foreach (var directory in s_bundlesPaths)
             {
-                if (GetBundleDirectory(Path.Combine(directory.path, bundleDir), out var dirInfo))
+                if (TryGetBundleDirectory(Path.Combine(directory.path, bundleDir), out var dirInfo))
                 {
                     foreach (var file in dirInfo.EnumerateFiles())
                     {
@@ -237,12 +338,12 @@ namespace Framework.AssetBundles
                 return new T[0];
             }
 
-            // start loading the asset bundles
+            // start loading the assets
             var assetLoadOps = new List<Task<T>>();
 
             foreach (var bundle in bundles)
             {
-                assetLoadOps.Add(LoadAssetAsync<T>(bundle, assetName));
+                assetLoadOps.Add(getAssetLoadOp(bundle));
             }
 
             // wait for all loading operations to complete and return the result
@@ -252,68 +353,19 @@ namespace Framework.AssetBundles
         }
 
         /// <summary>
-        /// Loads a type of asset by name from an asset bundle at a given path.
-        /// </summary>
-        /// <typeparam name="T">The type of asset to load from the bundle.</typeparam>
-        /// <param name="bundleName">The full name of the asset bundle to load the asset from.</param>
-        /// <param name="assetName">The name of the asset to load from the bundle.</param>
-        /// <returns>The loaded asset, or null if the bundled asset could not be found.</returns>
-        public static async Task<T> LoadAssetAsync<T>(string bundleName, string assetName) where T : Object
-        {
-            // loading should only be done by the main thread
-            if (!ContextUtils.EnsureMainThread())
-            {
-                return null;
-            }
-
-            // load the bundle
-            var bundle = LoadBundle(bundleName);
-
-            // get the asset from the bundle
-            if (bundle != null)
-            {
-                return await bundle.LoadAssetAsync<T>(assetName);
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Loads a scene asset bundle at a given path.
-        /// </summary>
-        /// <param name="bundleName">The full name of the asset bundle to load the scene from.</param>
-        /// <returns>The path of the scene which can now be loaded, or null if no scene was found.</returns>
-        public static async Task<string> LoadSceneAsync(string bundleName)
-        {
-            // loading should only be done by the main thread
-            if (!ContextUtils.EnsureMainThread())
-            {
-                return null;
-            }
-
-            // load the bundle
-            var bundle = LoadBundle(bundleName);
-
-            // get the scene in the bundle
-            if (bundle != null)
-            {
-                return await bundle.GetSceneAsync();
-            }
-
-            return null;
-        }
-
-        /// <summary>
         /// Loads an asset bundle.
         /// </summary>
         /// <param name="bundleName">The full name of the asset bundle to load the asset from.</param>
-        /// <returns>The asset bundle, or null if no matching bundle could be loaded.</returns>
-        private static BundleData LoadBundle(string bundleName)
+        /// <param name="bundle">Returns the asset bundle, or null if no matching bundle could be loaded.</param>
+        /// <returns>True if the bundle was successfully loaded..</returns>
+        private static bool TryLoadBundle(string bundleName, out BundleData bundle)
         {
+            var canonicalBundleName = bundleName.Replace("\\", "/");
+
             // check if this bundle is already loaded
-            if (s_nameToBundle.TryGetValue(bundleName, out var bundleData))
+            if (s_nameToBundle.TryGetValue(canonicalBundleName, out bundle))
             {
-                return bundleData;
+                return true;
             }
 
             // find the first bundle with a matching name
@@ -321,7 +373,7 @@ namespace Framework.AssetBundles
 
             foreach (var directory in s_bundlesPaths)
             {
-                if (GetBundleFile(Path.Combine(directory.path, bundleName), out file))
+                if (TryGetBundleFile(Path.Combine(directory.path, canonicalBundleName), out file))
                 {
                     break;
                 }
@@ -330,17 +382,18 @@ namespace Framework.AssetBundles
             // check if a bundle was found
             if (file == null)
             {
-                Debug.LogWarning($"Unable to find asset bundle with name \"{bundleName}\"!");
-                return null;
+                Debug.LogWarning($"Unable to find asset bundle with name \"{canonicalBundleName}\"!");
+                bundle = null;
+                return false;
             }
 
             // create the bundle information
-            bundleData = new BundleData(bundleName, file.FullName);
+            bundle = new BundleData(canonicalBundleName, file.FullName);
 
-            s_loadedBundles.Add(bundleData);
-            s_nameToBundle.Add(bundleName, bundleData);
+            s_loadedBundles.Add(bundle);
+            s_nameToBundle.Add(canonicalBundleName, bundle);
 
-            return bundleData;
+            return true;
         }
 
         /// <summary>
@@ -348,7 +401,7 @@ namespace Framework.AssetBundles
         /// </summary>
         /// <param name="path">The absolute path to a bundle directory.</param>
         /// <returns>True if the directory path is valid.</returns>
-        private static bool GetBundleDirectory(string path, out DirectoryInfo directory)
+        private static bool TryGetBundleDirectory(string path, out DirectoryInfo directory)
         {
             // check the directory path is valid and can be accesed
             try
@@ -357,7 +410,7 @@ namespace Framework.AssetBundles
             }
             catch (Exception e)
             {
-                Debug.LogError($"Asset bundle directory \"{path}\" cannot be accessed! {e.ToString()}");
+                Debug.LogError($"Asset bundle directory \"{path}\" cannot be accessed! {e}");
                 directory = null;
                 return false;
             }
@@ -370,7 +423,7 @@ namespace Framework.AssetBundles
         /// </summary>
         /// <param name="path">The absolute path to a bundle file.</param>
         /// <returns>True if the bundle file path is valid.</returns>
-        private static bool GetBundleFile(string path, out FileInfo file)
+        private static bool TryGetBundleFile(string path, out FileInfo file)
         {
             // check that the file path is valid and can be accessed
             try
@@ -379,7 +432,7 @@ namespace Framework.AssetBundles
             }
             catch (Exception e)
             {
-                Debug.LogError($"Asset bundle file \"{path}\" cannot be accessed! {e.ToString()}");
+                Debug.LogError($"Asset bundle file \"{path}\" cannot be accessed! {e}");
                 file = null;
                 return false;
             }

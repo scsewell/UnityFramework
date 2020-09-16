@@ -27,7 +27,7 @@ namespace Framework.AssetBundles
         /// Sets the reference from the currently assigned asset guid.
         /// </summary>
         /// <returns>False if no asset with the given GUID exists.</returns>
-        public override bool UpdateBundlePath()
+        internal override bool UpdateBundlePath()
         {
             var assetPath = AssetDatabase.GUIDToAssetPath(m_assetGuid);
 
@@ -74,7 +74,12 @@ namespace Framework.AssetBundles
         /// </summary>
         /// <remarks>
         /// This will complete synchronously if the asset does not reside in an asset bundle.
-        /// Avoid calling this method more than needed, as it does not cache the asset reference.
+        /// Avoid calling this method more than needed, as the loaded object is not cached internally.
+        /// 
+        /// The bundle for this asset can only be unloaded when ALL references to the loaded asset
+        /// have been set to null and the instance is garbage collected. If there are any managed
+        /// references to a <see cref="Object"/>, the object will tracked as in use, even if the object
+        /// is deleted.
         /// </remarks>
         public async Task<T> GetAsync()
         {

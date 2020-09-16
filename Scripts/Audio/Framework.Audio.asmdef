@@ -1,7 +1,9 @@
 {
     "name": "Framework.Audio",
+    "rootNamespace": "",
     "references": [
-        "GUID:b06f75a97055fbc4fb17f72ecfb1de49"
+        "GUID:b06f75a97055fbc4fb17f72ecfb1de49",
+        "GUID:795a52fa1992d9a439d5433342c7f9aa"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

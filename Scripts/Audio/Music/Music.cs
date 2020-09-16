@@ -1,21 +1,35 @@
-﻿using UnityEngine;
+﻿using System;
+
+using Framework.AssetBundles;
+
+using UnityEngine;
 
 namespace Framework.Audio
 {
+    [Serializable]
+    public class AssetBundleMusicReference : AssetBundleObjectReference<Music>
+    {
+    }
+
     /// <summary>
     /// An asset that stores a reference to a music track and manages metadata.
     /// </summary>
     [CreateAssetMenu(fileName = "New Music", menuName = "Framework/Audio/Music", order = 3)]
     public class Music : ScriptableObject
     {
+        [Serializable]
+        public class AssetBundleAudioClipReference : AssetBundleObjectReference<AudioClip>
+        {
+        }
+
         [SerializeField]
         [Tooltip("The music track.")]
-        private AudioClip m_track = null;
+        private AssetBundleAudioClipReference m_track = null;
 
         /// <summary>
         /// The music track.
         /// </summary>
-        public AudioClip Track => m_track;
+        public AssetBundleAudioClipReference Track => m_track;
 
         [SerializeField]
         [Tooltip("The display name of the track.")]
@@ -86,17 +100,25 @@ namespace Framework.Audio
         /// <summary>
         /// The time in seconds at which the audio loops.
         /// </summary>
-        public double LoopTime
+        /// <param name="music">The music to get the looping time for.</param>
+        /// <param name="track">The loaded audio track.</param>
+        /// <returns>The loop time, or 0 if <paramref name="music"/> or <paramref name="track"/>
+        /// is null.</returns>
+        public static double GetLoopTime(Music music, AudioClip track)
         {
-            get
+            if (music != null && track != null)
             {
-                switch (m_loop)
+                switch (music.m_loop)
                 {
-                    case LoopMode.AtEnd: return (double)m_track.samples / m_track.frequency;
-                    case LoopMode.AtTime: return (m_minutes * 60) + m_seconds;
+                    case LoopMode.AtEnd:
+                        return (double)track.samples / track.frequency;
+                    case LoopMode.AtTime:
+                        return (music.m_minutes * 60) + music.m_seconds;
+                    default:
+                        throw new ArgumentException("Invalid loop mode set!", nameof(music));
                 }
-                return 0.0;
             }
+            return 0.0;
         }
 
         public override string ToString() => Name;

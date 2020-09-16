@@ -24,7 +24,22 @@ namespace Framework.AssetBundles
         /// Sets the reference from the currently assigned asset guid.
         /// </summary>
         /// <returns>False if no asset with the given GUID exists.</returns>
-        public abstract bool UpdateBundlePath();
+        internal abstract bool UpdateBundlePath();
 #endif
+
+        public override bool Equals(object obj)
+        {
+            return obj is AssetBundleReference other && m_assetGuid == other.m_assetGuid;
+        }
+
+        public override int GetHashCode()
+        {
+            return m_assetGuid.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return $"{m_assetGuid}: {m_bundleName}";
+        }
     }
 }

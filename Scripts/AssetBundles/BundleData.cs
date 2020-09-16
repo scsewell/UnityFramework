@@ -108,11 +108,48 @@ namespace Framework.AssetBundles
         }
 
         /// <summary>
-        /// Loads an asset from this bundle, if it contains asset data.
+        /// Loads the first asset of a given type from this bundle.
         /// </summary>
+        /// <remarks>
+        /// This is only valid for asset bundles containing asset data.
+        /// </remarks>
+        /// <typeparam name="T">The type of asset to load.</typeparam>
+        /// <returns>The loaded asset, or null on failure.</returns>
+        public async Task<T> LoadAssetAsync<T>() where T : Object
+        {
+            EnsureNotDisposed();
+
+            var bundle = await m_loadBundleOp;
+
+            // check if this bundle contains assets
+            if (bundle.isStreamedSceneAssetBundle)
+            {
+                Debug.LogError($"Unable to load assets from asset bundle \"{bundleName}\", it contains scene data instead!");
+                return null;
+            }
+
+            // Load the asset from the bundle. After testing the asset loading behaviour, 
+            // repeated calls will reference the same managed object, as long as the bundle is
+            // not unloaded.
+            var asset = await bundle.LoadAllAssetsAsync<T>() as T;
+
+            // Keep track that this asset is loaded. This is done using a weak reference to the 
+            // asset object. We can check when the managed asset object is garbage collected, 
+            // so we know when it is safe to unload the bundled asset.
+            m_references.Add(new WeakReference(asset));
+
+            return asset;
+        }
+
+        /// <summary>
+        /// Loads an asset from this bundle.
+        /// </summary>
+        /// <remarks>
+        /// This is only valid for asset bundles containing asset data.
+        /// </remarks>
         /// <typeparam name="T">The type of asset to load.</typeparam>
         /// <param name="assetName">The name of the asset to load from the bundle.</param>
-        /// <returns>The loaded asset.</returns>
+        /// <returns>The loaded asset, or null on failure.</returns>
         public async Task<T> LoadAssetAsync<T>(string assetName) where T : Object
         {
             EnsureNotDisposed();
@@ -140,8 +177,11 @@ namespace Framework.AssetBundles
         }
 
         /// <summary>
-        /// Gets the scene contained in this asset bundle, if it contains scene data.
+        /// Gets the scene contained in this asset bundle.
         /// </summary>
+        /// <remarks>
+        /// This is only valid for asset bundles containing scene data.
+        /// </remarks>
         /// <returns>The scene path to load, or null if there is no scene data.</returns>
         public async Task<string> GetSceneAsync()
         {

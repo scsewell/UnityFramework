@@ -46,7 +46,7 @@ namespace Framework.Volumes
                 var volume = profileBlend.volume;
                 var profile = volume.Music;
 
-                if (profile != null && profile.Track != null)
+                if (profile != null)
                 {
                     if (!m_profileToSources.TryGetValue(profile, out var source))
                     {

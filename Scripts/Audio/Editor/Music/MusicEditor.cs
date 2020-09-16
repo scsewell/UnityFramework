@@ -35,9 +35,7 @@ namespace Framework.Audio
             EditorGUILayout.PropertyField(m_attribution);
             EditorGUILayout.PropertyField(m_loop);
 
-            serializedObject.ApplyModifiedProperties();
-
-            if ((target as Music).Loop == Music.LoopMode.AtTime)
+            if (m_loop.intValue == (int)Music.LoopMode.AtTime)
             {
                 using (new EditorGUI.IndentLevelScope())
                 {
