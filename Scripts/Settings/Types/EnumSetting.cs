@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using UnityEngine;
@@ -23,7 +24,10 @@ namespace Framework.Settings
         [Tooltip("The mapping between enum named values and display values.")]
         private Mapping[] m_values = null;
 
+
         private Type m_type = null;
+        private string[] m_displayValues = null;
+        private readonly Dictionary<Delegate, Action<Enum>> m_changeHandlers = new Dictionary<Delegate, Action<Enum>>();
 
         /// <summary>
         /// The type of the underlying enum for this setting.
@@ -44,8 +48,6 @@ namespace Framework.Settings
             }
         }
 
-        private string[] m_displayValues = null;
-
         /// <inheritdoc/>
         public override string[] DisplayValues
         {
@@ -59,11 +61,13 @@ namespace Framework.Settings
             }
         }
 
+
         /// <inheritdoc/>
         internal override void Initialize()
         {
             base.Initialize();
 
+            m_changeHandlers.Clear();
             m_displayValues = m_values.Select(m => m.displayName).ToArray();
         }
 
@@ -162,6 +166,39 @@ namespace Framework.Settings
                 return default;
             }
             return (T)Value;
+        }
+
+        /// <inheritdoc cref="Setting{T}.RegisterChangeHandler(Action{T})"/>
+        public void RegisterChangeHandler<T>(Action<T> callback) where T : Enum
+        {
+            if (callback == null)
+            {
+                throw new ArgumentNullException(nameof(callback));
+            }
+
+            var action = (Action<Enum>)(value =>
+            {
+                callback?.Invoke(GetTypedValue<T>());
+            });
+
+            m_changeHandlers[callback] = action;
+            TypedValueChanged += action;
+            action(Value);
+        }
+
+        /// <inheritdoc cref="Setting{T}.DeregisterChangeHandler(Action{T})"/>
+        public void DeregisterChangeHandler<T>(Action<T> callback) where T : Enum
+        {
+            if (callback == null)
+            {
+                throw new ArgumentNullException(nameof(callback));
+            }
+
+            if (m_changeHandlers.TryGetValue(callback, out var action))
+            {
+                m_changeHandlers.Remove(callback);
+                TypedValueChanged -= action;
+            }
         }
 
 #if UNITY_EDITOR

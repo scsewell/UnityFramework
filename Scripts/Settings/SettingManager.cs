@@ -99,6 +99,10 @@ namespace Framework.Settings
             {
                 setting.Initialize();
             }
+            foreach (var setting in m_settings)
+            {
+                setting.AfterInitialize();
+            }
 
             // try to load the saved settings
             Load();

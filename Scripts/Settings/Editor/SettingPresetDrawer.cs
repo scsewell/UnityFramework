@@ -28,7 +28,7 @@ namespace Framework.Settings
             }
 
             var valueRect = position;
-            valueRect.xMin = settingRect.xMax + 10f;
+            valueRect.xMin = settingRect.xMax;
 
             SettingValueDrawer.Draw(valueRect, GUIContent.none, value, setting.objectReferenceValue as Setting);
         }

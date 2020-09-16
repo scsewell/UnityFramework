@@ -15,6 +15,8 @@ namespace Framework.Settings
         protected SerializedProperty m_description = null;
         protected SerializedProperty m_displayMode = null;
         protected SerializedProperty m_defaultValue = null;
+        protected SerializedProperty m_onlyModifiableIf = null;
+        protected SerializedProperty m_onlyVisibleIf = null;
 
         protected virtual void OnEnable()
         {
@@ -22,6 +24,8 @@ namespace Framework.Settings
             m_description = serializedObject.FindProperty("m_description");
             m_displayMode = serializedObject.FindProperty("m_displayMode");
             m_defaultValue = serializedObject.FindProperty("m_defaultValue");
+            m_onlyModifiableIf = serializedObject.FindProperty("m_onlyModifiableIf");
+            m_onlyVisibleIf = serializedObject.FindProperty("m_onlyVisibleIf");
         }
 
         public override void OnInspectorGUI()
@@ -42,6 +46,12 @@ namespace Framework.Settings
                 var label = new GUIContent(m_defaultValue.displayName, m_defaultValue.tooltip);
                 SettingValueDrawer.Draw(rect, label, m_defaultValue, setting);
             }
+
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(m_onlyModifiableIf);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(m_onlyVisibleIf);
 
             serializedObject.ApplyModifiedProperties();
         }

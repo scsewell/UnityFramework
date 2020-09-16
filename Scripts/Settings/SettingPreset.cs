@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Framework.Settings
 {
     /// <summary>
-    /// A default value for a setting.
+    /// A pre-defined value for a setting.
     /// </summary>
     [Serializable]
     public class SettingPreset
@@ -24,7 +24,7 @@ namespace Framework.Settings
         private string m_value = null;
 
         /// <summary>
-        /// Checks if the setting is using this preset's value.
+        /// Checks if the setting is using this preset value.
         /// </summary>
         public bool IsApplied => m_setting.SerializedValue == m_value;
 
