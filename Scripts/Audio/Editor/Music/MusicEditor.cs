@@ -9,6 +9,7 @@ namespace Framework.Audio
         protected SerializedProperty m_track = null;
         protected SerializedProperty m_name = null;
         protected SerializedProperty m_artist = null;
+        protected SerializedProperty m_attribution = null;
         protected SerializedProperty m_loop = null;
         protected SerializedProperty m_minutes = null;
         protected SerializedProperty m_seconds = null;
@@ -18,6 +19,7 @@ namespace Framework.Audio
             m_track = serializedObject.FindProperty("m_track");
             m_name = serializedObject.FindProperty("m_name");
             m_artist = serializedObject.FindProperty("m_artist");
+            m_attribution = serializedObject.FindProperty("m_attribution");
             m_loop = serializedObject.FindProperty("m_loop");
             m_minutes = serializedObject.FindProperty("m_minutes");
             m_seconds = serializedObject.FindProperty("m_seconds");
@@ -30,6 +32,7 @@ namespace Framework.Audio
             EditorGUILayout.PropertyField(m_track);
             EditorGUILayout.PropertyField(m_name);
             EditorGUILayout.PropertyField(m_artist);
+            EditorGUILayout.PropertyField(m_attribution);
             EditorGUILayout.PropertyField(m_loop);
 
             serializedObject.ApplyModifiedProperties();

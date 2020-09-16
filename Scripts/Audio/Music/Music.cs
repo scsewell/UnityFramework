@@ -35,6 +35,16 @@ namespace Framework.Audio
         /// </summary>
         public string Artist => m_artist;
 
+        [SerializeField]
+        [Tooltip("The credits for the music.")]
+        [TextArea(4, 10)]
+        private string m_attribution = string.Empty;
+
+        /// <summary>
+        /// The credits for the music.
+        /// </summary>
+        public string Attribution => m_attribution;
+
         /// <summary>
         /// The behaviours of a music track when it is finished playing.
         /// </summary>
