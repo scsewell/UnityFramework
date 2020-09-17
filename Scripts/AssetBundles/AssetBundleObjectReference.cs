@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 using UnityEngine;
 
@@ -55,7 +54,7 @@ namespace Framework.AssetBundles
             if (isInBundle)
             {
                 m_bundleName = importer.assetBundleName;
-                m_assetName = Path.GetFileNameWithoutExtension(assetPath);
+                m_assetName = assetPath;
                 m_asset = null;
             }
             else
