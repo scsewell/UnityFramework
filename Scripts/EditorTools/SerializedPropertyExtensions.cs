@@ -10,15 +10,15 @@ using UnityEngine;
 namespace Framework.EditorTools
 {
     /// <summary>
-    /// A class containing extention methods for serialized objects and properties.
+    /// A class containing extention methods for <see cref="SerializedProperty"/>.
     /// </summary>
-    public static class SerializedObjectExtentions
+    public static class SerializedPropertyExtentions
     {
         /// <summary>
         /// Gets the field values backing a serialized property.
         /// </summary>
         /// <param name="property">A serialized property.</param>
-        /// <returns>A new array containing all the field instances.</returns>
+        /// <returns>A new array containing the field values for all target instances.</returns>
         public static object[] GetPropertyFields(this SerializedProperty property)
         {
             if (property == null)
@@ -26,7 +26,7 @@ namespace Framework.EditorTools
                 throw new ArgumentNullException(nameof(property));
             }
 
-            // Make sure the serlized object is up to date before we retrieve any values from the underlying objects
+            // Make sure the serialized object is up to date before we retrieve any values from the underlying objects
             var serializedObject = property.serializedObject;
             serializedObject.ApplyModifiedProperties();
 
@@ -48,11 +48,6 @@ namespace Framework.EditorTools
             }
 
             var objectType = instance.GetType();
-
-            if (objectType == null)
-            {
-                return null;
-            }
 
             // get the next field along the path
             var element = path.Dequeue();
