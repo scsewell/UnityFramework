@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Framework
 {
     /// <summary>
-    /// A class containing <see cref="Task"/> extention methods.
+    /// A class containing <see cref="Task"/> extension methods.
     /// </summary>
     public static class TaskExtensions
     {

@@ -6,9 +6,9 @@ using UnityEngine;
 namespace Framework
 {
     /// <summary>
-    /// A class contaning extention methods for collections.
+    /// A class contaning extension methods for collections.
     /// </summary>
-    public static class CollectionExtentions
+    public static class CollectionExtensions
     {
         /// <summary>
         /// Gets a random value from the collection.

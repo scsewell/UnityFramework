@@ -3,9 +3,9 @@
 namespace Framework
 {
     /// <summary>
-    /// A class containing <see cref="GameObject"/> extention methods.
+    /// A class containing <see cref="GameObject"/> extension methods.
     /// </summary>
-    public static class GameObjectExtentions
+    public static class GameObjectExtensions
     {
         public static T GetOrAddComponent<T>(this GameObject go) where T : Component
         {

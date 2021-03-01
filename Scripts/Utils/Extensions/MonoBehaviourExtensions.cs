@@ -6,9 +6,9 @@ using UnityEngine;
 namespace Framework
 {
     /// <summary>
-    /// A class containing <see cref="MonoBehaviour"/> extention methods.
+    /// A class containing <see cref="MonoBehaviour"/> extension methods.
     /// </summary>
-    public static class MonoBehaviourExtentions
+    public static class MonoBehaviourExtensions
     {
         /// <summary>
         /// Starts a coroutine that executes an action after a timed delay.

@@ -1,5 +1,6 @@
 {
     "name": "Framework.Settings",
+    "rootNamespace": "Framework.Settings",
     "references": [
         "GUID:dfd573705fb2c044fbae5a8c915b12d6",
         "GUID:b06f75a97055fbc4fb17f72ecfb1de49"
