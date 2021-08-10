@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+
 using UnityEngine.Scripting;
 
 namespace Framework
@@ -82,7 +83,7 @@ namespace Framework
 
                 var method = typeof(EnumMethods).GetMethod(
                     functionName,
-                    BindingFlags.Instance | BindingFlags.NonPublic,
+                    BindingFlags.Static | BindingFlags.NonPublic,
                     null,
                     new[] { valueType, valueType }, 
                     null
