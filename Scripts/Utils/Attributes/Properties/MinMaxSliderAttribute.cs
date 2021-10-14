@@ -65,14 +65,14 @@ namespace Framework
         /// Interpolates from the lower bound to the upper bound by t. 
         /// </summary>
         /// <param name="t">The interpolation factor.</param>
-        /// <returns>The interplated value on the range.</returns>
+        /// <returns>The interpolated value on the range.</returns>
         public float Lerp(float t) => Mathf.Lerp(m_min, m_max, t);
 
         /// <summary>
         /// Gets the interpolation factor which results in a value on the range. 
         /// </summary>
         /// <param name="value">A value.</param>
-        /// <returns>The interplation factor.</returns>
+        /// <returns>The interpolation factor.</returns>
         public float InverseLerp(float value) => Mathf.InverseLerp(m_min, m_max, value);
     }
 

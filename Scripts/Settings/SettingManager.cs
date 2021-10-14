@@ -60,7 +60,7 @@ namespace Framework.Settings
         private bool m_autoAddSettings = true;
 
         [SerializeField]
-        private List<Setting> m_settings = null;
+        private List<Setting> m_settings = new List<Setting>();
 
         private List<SettingCategory> m_categories = null;
         private Dictionary<SettingCategory, List<Setting>> m_categoryToSettings = null;
